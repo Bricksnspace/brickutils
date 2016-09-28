@@ -1,0 +1,14 @@
+[options]
+kind=basic
+caption=$!currentSet.getSetid()
+description=$!currentSet.getName()
+sortOn=$!user1
+
+<items>
+#foreach($brick in $bricks)
+#if ( $brick.getLdrawID().length() > 0 )
+#if ( ! $excludeExtra || ! $brick.isExtra() )
+${brick.getLdrawID()}:[color=$brick.getLdrawColor()] [count=$brick.getQuantity()]
+#end
+#end
+#end

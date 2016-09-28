@@ -1,0 +1,86 @@
+2015-02-04  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/HtmlExportTask.java (doInBackground): removed local HTML color notation generation
+	* src/brickUtils/ExportedSet.java: a class to avoid data poisoning or deleting via template macro calls
+	* src/brickUtils/CheckBuildableDialog.java (CheckBuildableDialog): Added export via template
+
+2015-02-03  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/ExportedBrick.java: a class to avoid data poisoning or deleting via template macro calls
+
+2015-02-02  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/HtmlExportTask.java: removed brick image local generation
+	(doInBackground): moved image size in Brick class and HtmlExportDialog
+	* src/brickUtils/TemplateExportTask.java: template export worker added
+
+2015-01-28  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/brickUtils.java (initialize): added menu item for template export
+	(doTemplateExport): template export action
+	* src/brickUtils/BrickColor.java (getLddName): added method to get color name
+	* src/brickUtils/BrickShapeGLView.java (BrickShapeGLView): added size setup in constructor
+	
+2015-01-25  Mario Pascucci  <mpascucci@gmail.com>
+	
+	* src/brickUtils/Brick.java: added getters for brick properties
+	(getBrickImage): added a general function returns an image 
+		for current brick, front or front and back view
+	(getHtmlColor): added method to get coor in HTML notation #rrggbb 
+	(getBrickImageBase64Enc): added method to get PNG image Base64 encoded
+	(getColorName): method to get color name
+
+2014-12-29  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/ImportLDrawProjectTask.java: partially rewrite to use new LDrawLib library
+	* src/brickUtils/LdrSearch.java (LdrSearch): changed to reusable dialog
+	* src/brickUtils/BlSearch.java (BlSearch): changed to reusable dialog
+	* src/brickUtils/LddSearch.java (LddSearch): changed to reusable dialog, to avoid resource 
+		leak from OpenGL-Xorg connections
+	* src/brickUtils/AboutDialog.java (AboutDialog): release 0.2.0.1
+
+2014-09-23  Mario Pascucci  <mpascucci@gmail.com>
+
+	* brickUtils: bumped to 0.2.0.0 (release)
+	* src/brickUtils/BrickShapeGLView.java (getStaticImage): added a workaround to a (unconfirmed)
+		bug in AWT on OSX Mavericks 10.9. Now HTML export work fine: no solid black images.
+	(reshape): corrected values for depth buffer
+	* src/brickUtils/BrickShapePanel.java (dispose): created a new dispose() function to avoid excessive
+		use of X display connections when instanced lots of BrickShapePanel
+
+2014-09-16  Mario Pascucci  <mpascucci@gmail.com>
+
+	* brickUtils: bumped to 0.2.0.0-rc9
+	* src/brickUtils/AboutDialog.java (actionPerformed): added "More software" dialog 
+	* src/brickUtils/brickUtils.java (doImportLdrawProject): Added warning message on LDraw project
+		import error
+	* src/brickUtils/ImportLDrawProjectTask.java: Totally rewrite LDraw import function
+		using new LDraw-handling library LDrawLib 
+2014-08-26  Mario Pascucci  <mpascucci@gmail.com>
+	* LDrawLib.java: removed
+	* brickUtils.java: manage to import new LDrawLib library, now stand-alone
+	 
+2014-08-11  Mario Pascucci  <mpascucci@gmail.com>
+
+	* AboutDialog.java (AboutDialog): bumped to 0.2.0.0-rc8
+	(actionPerformed): added message dialog with thanks
+
+2014-08-08  Mario Pascucci  <mpascucci@gmail.com>
+	
+	* brickUtils.java: tested on MAC, some problems with default look and feel, 
+		so forced "Cross Platform" look and feel
+ 	* Experimental: try DB transaction to prevent table corruption during updates. 
+	* ImportBlPartsTask.java (doInBackground): changed to try update protection via DB tansaction
+	* BricklinkPart.java (beginUpdate): renamed from "mark" and changed to try update with transaction, so
+		if update fails Bricklink part table isn't out of sync (i.e. all parts marksd as deleted)
+	(abortUpdate): added to rollback transaction
+	(endUpdate): added to commit transaction and re-enable autocommit
+
+2014-07-13  Mario Pascucci  <mpascucci@gmail.com>
+
+	* CheckUpdate.java (doInBackground): if program gets a valid XML or XHTML it considers a valid update, 
+		so if parts+colors == 0 returns without incrementing update serial. 
+	* LDrawPart.java: moved table name to a final static public string
+	* BrickDB.java (createIndexes): inserted index creation to speed up some import functions
+	(initDB): added call to createIndexes()
+	

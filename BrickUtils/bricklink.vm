@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<INVENTORY>
+#foreach ($brick in $bricks) 
+#if ( ! $excludeExtra || ! $brick.isExtra() )
+<ITEM>
+<ITEMTYPE>P</ITEMTYPE>
+<ITEMID>$brick.getBlID()</ITEMID>
+<COLOR>$brick.getBlColor()</COLOR>
+<MINQTY>$brick.getQuantity()</MINQTY>
+<NOTIFY>N</NOTIFY>
+<CONDITION>$!user2</CONDITION>
+#if ( $user1 && $user1 != "")
+<WANTEDLISTID>$user1</WANTEDLISTID>
+#end
+</ITEM>
+#end
+#end
+</INVENTORY>

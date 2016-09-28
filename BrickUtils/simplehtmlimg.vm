@@ -1,0 +1,23 @@
+<!DOCTYPE xhtml>
+<html>
+<head>
+<style type='text/css'>
+body { font-family:sans-serif;}
+table,th,td { empty-cells:show;border-collapse:collapse; border:1px solid gray;  padding:0.2em; }
+.color { border:0 solid white }
+img { border:1 solid white; vertical-align:middle }
+</style>
+<title>$!currentSet.getSetid() - $!currentSet.getName()</title></head>
+<body>
+<h2>$!currentSet.getSetid() - $!currentSet.getName()</h2>
+<table border='1'><thead><tr><th>LDD ID</th><th>BLink ID</th><th>LDraw ID</th><th>Color</th><th>Qty</th><th>Brick shape</th><th>Description</th></tr></thead>
+<tbody>
+#foreach ($b in $bricks)
+<tr><td>$b.getDesignID()</td><td>$b.getBlID()</td><td>$b.getLdrawID()</td>
+<td><table width='100%' class='color'><tr><td width='20%' class='color'>$b.getLddColor()</td><td class='color'><div style='display:inline;border-style:solid;border-width:0 1em 0 1em;border-color:$b.getHtmlColor()'/></td></tr></table>$b.getColorName()</td>
+<td>$b.getQuantity()</td><td style='text-align:center;padding:0.5 em;'><img src='$imagedir/${b.getId()}.png'/></td><td>$b.getName()</td></tr>
+#end
+</tbody></table>
+</body>
+</html>
+
