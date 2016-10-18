@@ -36,6 +36,8 @@ import org.apache.velocity.exception.MethodInvocationException;
 import org.apache.velocity.exception.ParseErrorException;
 import org.apache.velocity.exception.ResourceNotFoundException;
 
+import bricksnspace.ldraw3d.LDrawGLDisplay;
+
 
 /*
  * Exports a list of Bricks (as ArrayList) in a HTML file
@@ -44,7 +46,7 @@ import org.apache.velocity.exception.ResourceNotFoundException;
 public class TemplateExportTask extends SwingWorker<Integer, Void> {
 
 	File html;
-	BrickShapeGLView brickShape;
+	LDrawGLDisplay brickShape;
 	ExportedSet currentSet;
 	ArrayList<ExportedBrick> bricks;
 	private String templateFile;
@@ -57,7 +59,7 @@ public class TemplateExportTask extends SwingWorker<Integer, Void> {
 	 * @param blxml an XML from pyBrickUtils 
 	 * 
 	 */
-	public TemplateExportTask(ArrayList<ExportedBrick> bricks, ExportedSet bs, BrickShapeGLView shape, 
+	public TemplateExportTask(ArrayList<ExportedBrick> bricks, ExportedSet bs, LDrawGLDisplay shape, 
 			VelocityContext vcon, String template, File output) {
 
 		templateFile = template;
@@ -109,8 +111,10 @@ public class TemplateExportTask extends SwingWorker<Integer, Void> {
 			dir.mkdir();
 			velCon.put("imagedir", dir.getName());
 			for (ExportedBrick b : bricks) {
-				BufferedImage img = b.getBrickImage(brickShape, true);
-				ImageIO.write(img, "png", new File(dir,Integer.toString(b.getId())+".png"));
+				if (b.ldrawID != "") {
+					BufferedImage img = b.getBrickImage(brickShape, true);
+					ImageIO.write(img, "png", new File(dir,Integer.toString(b.getId())+".png"));
+				}
 				numBricks++;
 				setProgress(numBricks*100/totalBricks);
 			}

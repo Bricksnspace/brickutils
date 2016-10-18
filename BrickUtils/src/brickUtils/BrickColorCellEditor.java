@@ -65,7 +65,7 @@ public class BrickColorCellEditor extends AbstractCellEditor implements TableCel
             if (dialog.getResponse() == JOptionPane.OK_OPTION) {
             	currentColor = dialog.getSelected();
             	if (bsp != null) {
-            		bsp.changeColor(currentColor);
+            		bsp.setColor(currentColor);
             	}
             }
             //Make the renderer reappear.

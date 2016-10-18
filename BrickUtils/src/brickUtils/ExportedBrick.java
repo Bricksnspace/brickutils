@@ -30,6 +30,11 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 
+import bricksnspace.j3dgeom.Matrix3D;
+import bricksnspace.ldraw3d.LDRenderedPart;
+import bricksnspace.ldraw3d.LDrawGLDisplay;
+import bricksnspace.ldrawlib.LDPrimitive;
+
 /**
  * A "harmless" class used for template export via Velocity
  * <p/>
@@ -230,15 +235,38 @@ public class ExportedBrick {
 	 * @param frontandback if true generates a front and back view, else only front view
 	 * @return 3D image of this brick
 	 */
-	public BufferedImage getBrickImage(BrickShapeGLView brickShape, boolean frontandback) {
+	public BufferedImage getBrickImage(LDrawGLDisplay brickShape, boolean frontandback) {
 		
-		brickShape.setColor(color,false);
-		brickShape.setLdrawid(ldrawID,false);
-		BufferedImage img = brickShape.getStaticImage(false);
+		brickShape.disableAutoRedraw();
+		brickShape.clearAllParts();
+		LDRenderedPart rendPart = LDRenderedPart.newRenderedPart(
+				LDPrimitive.newGlobalPart(ldrawID, BrickColor.getColor(color).ldraw, new Matrix3D()));
+		double diagxz;
+		float angle = 20f;
+		if (rendPart.getSizeZ() > rendPart.getSizeX()) {
+			angle = 70;
+		}
+		diagxz = Math.sqrt(rendPart.getSizeX()*rendPart.getSizeX() +
+			rendPart.getSizeZ()*rendPart.getSizeZ());
+		double diagxy = Math.sqrt(rendPart.getSizeX()*rendPart.getSizeX() +
+				rendPart.getSizeY()*rendPart.getSizeY());
+		float diag = (float) Math.max(diagxz,diagxy);
+		int size = brickShape.getCanvas().getPreferredSize().width;
+		float ratio = (float) (diag/(size-30f));
+		brickShape.resetView();
+		brickShape.rotateY(angle);
+		brickShape.rotateX(-30);
+		brickShape.setOrigin(rendPart.getCenterX(), rendPart.getCenterY(), rendPart.getCenterZ());
+		brickShape.setZoom(ratio);
+		brickShape.enableAutoRedraw();
+		brickShape.addRenderedPart(rendPart);
+		BufferedImage img = brickShape.getStaticImage(size, size);
 		if (! frontandback) {
 			return img;
 		}
-		BufferedImage imgf = brickShape.getStaticImage(true);
+		brickShape.rotateX(180);
+		brickShape.addRenderedPart(rendPart);
+		BufferedImage imgf = brickShape.getStaticImage(size, size);
 		int sizex = img.getWidth()+imgf.getWidth();
 		// image height is max of two
 		int sizey = img.getHeight() > imgf.getHeight() ? img.getHeight() : imgf.getHeight();

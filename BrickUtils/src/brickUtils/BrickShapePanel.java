@@ -20,6 +20,7 @@
 
 package brickUtils;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -32,26 +33,50 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import bricksnspace.j3dgeom.Matrix3D;
+import bricksnspace.ldraw3d.LDRenderedPart;
+import bricksnspace.ldraw3d.LDrawGLDisplay;
+import bricksnspace.ldrawlib.LDPrimitive;
+import bricksnspace.ldrawlib.LDrawColor;
+import bricksnspace.ldrawlib.LDrawException;
 import bricksnspace.ldrawlib.LDrawLib;
+import bricksnspace.ldrawlib.LDrawPartType;
 
 public class BrickShapePanel extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = 3165286567872362085L;
-	private BrickShapeGLView brickShape;
-	private JButton animUp;
-	private JButton animDown;
-	private JButton animLeft;
-	private JButton animRight;
-	private JButton animFlipX;
-	private JButton animFlipY;
+	private int size = 200;
+	private LDrawGLDisplay brickShape = null;
+	private LDrawLib ldrlib;
+	private int currentColor = LDrawColor.LTGRAY;
+	private String currentPart = "3005";
 	private JButton animReset;
 	private JLabel shapeRightness;
 	private ImageIcon shapeOk;
 	private ImageIcon shapeLike;
 	private ImageIcon shapeUnkn;
+	private int currentPartId;
 
 	
 	public BrickShapePanel(LDrawLib ldrlib) {
+		
+		this.ldrlib = ldrlib;
+		initialize();
+	}
+		
+	
+	
+	public BrickShapePanel(LDrawLib ldrlib, int size) {
+		
+		this.ldrlib = ldrlib;
+		this.size = size;
+		initialize();
+	}
+		
+	
+		
+		
+	private void initialize() {
 		
 		setLayout(new GridBagLayout());
 		
@@ -69,63 +94,72 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 			brickShape = null;
 			return;
 		}
-		brickShape = new BrickShapeGLView(ldrlib,true,200,200);
-		brickShape.setLdrawColor(71, false);
-		brickShape.setLdrawid("3005.dat");
+		try {
+			LDrawGLDisplay.setAntialias(true);
+			brickShape = new LDrawGLDisplay();
+			brickShape.getCanvas().setPreferredSize(new Dimension(size,size));
+			brickShape.update();
+		} catch (LDrawException e) {
+			brickShape = null;
+			e.printStackTrace();
+		}
 		gbcs.fill = GridBagConstraints.NONE;
 		gbcs.gridx = 0;
 		gbcs.gridy = 0;
 		gbcs.gridheight = 3;
 		gbcs.gridwidth = 3;
 		add(brickShape.getCanvas(),gbcs);
-		animUp = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-up.png")));
-		animDown = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-down.png")));
-		animLeft = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-previous.png")));
-		animRight = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-next.png")));
-		animFlipX = new JButton(new ImageIcon(brickUtils.class.getResource("images/object-flip-vertical.png")));
-		animFlipY = new JButton(new ImageIcon(brickUtils.class.getResource("images/object-flip-horizontal.png")));
+//		animUp = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-up.png")));
+//		animDown = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-down.png")));
+//		animLeft = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-previous.png")));
+//		animRight = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-next.png")));
+//		animFlipX = new JButton(new ImageIcon(brickUtils.class.getResource("images/object-flip-vertical.png")));
+//		animFlipY = new JButton(new ImageIcon(brickUtils.class.getResource("images/object-flip-horizontal.png")));
 		animReset = new JButton(new ImageIcon(brickUtils.class.getResource("images/view-refresh.png")));
 		shapeOk = new ImageIcon(brickUtils.class.getResource("images/ok.png"));
 		shapeLike = new ImageIcon(brickUtils.class.getResource("images/no.png"));
 		shapeUnkn = new ImageIcon(brickUtils.class.getResource("images/off.png"));
 		
 		gbcs.fill = GridBagConstraints.HORIZONTAL;
-		gbcs.gridx = 3;
-		gbcs.gridy = 0;
-		gbcs.gridheight = 1;
-		gbcs.gridwidth = 1;
-		add(animUp,gbcs);
-		gbcs.gridy = 1;
-		gbcs.weighty = 1.0;
-		add(animFlipX,gbcs);
-		gbcs.gridy = 2;
-		gbcs.weighty = 0.0;
-		add(animDown,gbcs);
-		gbcs.gridx = 0;
+//		gbcs.gridx = 3;
+//		gbcs.gridy = 0;
+//		gbcs.gridheight = 1;
+//		gbcs.gridwidth = 1;
+//		add(animUp,gbcs);
+//		gbcs.gridy = 1;
+//		gbcs.weighty = 1.0;
+//		add(animFlipX,gbcs);
+//		gbcs.gridy = 2;
+//		gbcs.weighty = 0.0;
+//		add(animDown,gbcs);
+//		gbcs.gridx = 0;
+//		gbcs.gridy = 3;
+//		add(animLeft,gbcs);
+//		gbcs.gridx = 1;
+//		gbcs.weightx = 1.0;
+//		add(animFlipY,gbcs);
+//		gbcs.gridx = 2;
+//		gbcs.weightx = 0.0;
+//		add(animRight,gbcs);
 		gbcs.gridy = 3;
-		add(animLeft,gbcs);
-		gbcs.gridx = 1;
-		gbcs.weightx = 1.0;
-		add(animFlipY,gbcs);
-		gbcs.gridx = 2;
-		gbcs.weightx = 0.0;
-		add(animRight,gbcs);
-		gbcs.gridy = 4;
-		gbcs.gridwidth = 3;
+		gbcs.gridwidth = 2;
 		gbcs.gridx = 0;
+		gbcs.weightx = 0.9;
 		add(animReset,gbcs);
 		shapeRightness = new JLabel(shapeUnkn);
+		gbcs.fill = GridBagConstraints.NONE;
 		gbcs.gridwidth = 1;
 		gbcs.gridheight = 1;
-		gbcs.gridx = 3;
+		gbcs.gridx = 2;
 		gbcs.gridy = 3;
+		gbcs.weightx = 0.1;
 		add(shapeRightness,gbcs);
-		animUp.addActionListener(this);
-		animDown.addActionListener(this);
-		animLeft.addActionListener(this);
-		animRight.addActionListener(this);
-		animFlipX.addActionListener(this);
-		animFlipY.addActionListener(this);
+//		animUp.addActionListener(this);
+//		animDown.addActionListener(this);
+//		animLeft.addActionListener(this);
+//		animRight.addActionListener(this);
+//		animFlipX.addActionListener(this);
+//		animFlipY.addActionListener(this);
 		animReset.addActionListener(this);
 
 	}
@@ -148,26 +182,65 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 		
 		if (brickShape == null)
 			return;
+		currentPart = ldrid;
+		//System.out.println("CurrentPart = '"+ldrid+"'");
+		if (ldrlib.checkPart(currentPart) != LDrawPartType.NONE) {
+			displayPart();
+		}
+		else {
+			shapeRightness.setIcon(shapeUnkn);
+			brickShape.clearAllParts();
+			brickShape.resetView();
+		}
+	}
+		
+		
+	private void displayPart() {
+		brickShape.disableAutoRedraw();
+		brickShape.clearAllParts();
+		LDRenderedPart rendPart = LDRenderedPart.newRenderedPart(
+				LDPrimitive.newGlobalPart(currentPart, currentColor, new Matrix3D()));
+		currentPartId = rendPart.getId();
+		double diagxz;
+		float angle = 20f;
+		if (rendPart.getSizeZ() > rendPart.getSizeX()) {
+			angle = 70;
+		}
+		diagxz = Math.sqrt(rendPart.getSizeX()*rendPart.getSizeX() +
+			rendPart.getSizeZ()*rendPart.getSizeZ());
+		double diagxy = Math.sqrt(rendPart.getSizeX()*rendPart.getSizeX() +
+				rendPart.getSizeY()*rendPart.getSizeY());
+		float diag = (float) Math.max(diagxz,diagxy);
+		float ratio = (float) (diag/(size-50f));
+		brickShape.resetView();
+		brickShape.rotateY(angle);
+		brickShape.rotateX(-30);
+		brickShape.setOrigin(rendPart.getCenterX(), rendPart.getCenterY(), rendPart.getCenterZ());
+		brickShape.setZoom(ratio);
+		brickShape.enableAutoRedraw();
+		brickShape.addRenderedPart(rendPart);
 		shapeRightness.setIcon(shapeOk);
-		brickShape.setLdrawid(ldrid);
 	}
 	
 	
 	
 	public void setColor(int colorid) {
 		
-		if (brickShape == null)
-			return;
-		brickShape.setColor(colorid,false);
+		currentColor = BrickColor.getColor(colorid).ldraw;
 	}
 	
 	
 	
 	public void changeColor(int colorid) {
 		
-		if (brickShape == null)
+		setColor(colorid);
+		if (brickShape == null || currentPart == null)
 			return;
-		brickShape.setColor(colorid,true);
+		brickShape.delRenderedPart(currentPartId);
+		LDRenderedPart rendPart = LDRenderedPart.newRenderedPart(
+				LDPrimitive.newGlobalPart(currentPart, currentColor, new Matrix3D()));
+		currentPartId = rendPart.getId();
+		brickShape.addRenderedPart(rendPart);
 	}
 	
 	
@@ -175,24 +248,23 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 	public void setBlid(String blid) {
 
 		Brick b;
-		String ldrid;
 		
 		if (brickShape == null)
 			return;
 		try {
 			b = PartMapping.getBrickByBlinkId(blid);
-			ldrid = b.ldrawID;
+			currentPart = b.ldrawID;
 		} catch (SQLException e) {
-			ldrid = "";
+			currentPart = "";
 		}
-		if (ldrid.length() == 0) {
+		if (currentPart.length() == 0) {
 			shapeRightness.setIcon(shapeLike);
-			ldrid = blid + ".dat";
+			currentPart = blid + ".dat";
 		}
 		else {
 			shapeRightness.setIcon(shapeOk);
 		}
-		brickShape.setLdrawid(ldrid);
+		setLdrawid(currentPart);
 
 	}
 	
@@ -200,24 +272,23 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 	public void setLddid(String designid, String decorid) {
 
 		Brick b;
-		String ldrid;
 	
 		if (brickShape == null)
 			return;
 		try {
 			b = PartMapping.getBrickByDesignId(designid,decorid);
-			ldrid = b.ldrawID;
+			currentPart = b.ldrawID;
 		} catch (SQLException e) {
-			ldrid = "";
+			currentPart = "";
 		}
-		if (ldrid.length() == 0) {
+		if (currentPart.length() == 0) {
 			shapeRightness.setIcon(shapeLike);
-			ldrid = designid + ".dat";
+			currentPart = designid + ".dat";
 		}
 		else {
 			shapeRightness.setIcon(shapeOk);
 		}
-		brickShape.setLdrawid(ldrid);
+		setLdrawid(currentPart);
 
 	}
 	
@@ -225,26 +296,26 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 	@Override
 	public void actionPerformed(ActionEvent ev) {
 		
-		if (ev.getSource() == animUp) {
-			brickShape.rotateUp();
-		}
-		else if (ev.getSource() == animDown) {
-			brickShape.rotateDown();
-		}
-		else if (ev.getSource() == animLeft) {
-			brickShape.rotateLeft();
-		}
-		else if (ev.getSource() == animRight) {
-			brickShape.rotateRight();
-		}
-		else if (ev.getSource() == animFlipX) {
-			brickShape.rotateFlipX();
-		}
-		else if (ev.getSource() == animFlipY) {
-			brickShape.rotateFlipY();
-		}
-		else if (ev.getSource() == animReset) {
-			brickShape.rotateReset();
+//		if (ev.getSource() == animUp) {
+//			brickShape.rotateUp();
+//		}
+//		else if (ev.getSource() == animDown) {
+//			brickShape.rotateDown();
+//		}
+//		else if (ev.getSource() == animLeft) {
+//			brickShape.rotateLeft();
+//		}
+//		else if (ev.getSource() == animRight) {
+//			brickShape.rotateRight();
+//		}
+//		else if (ev.getSource() == animFlipX) {
+//			brickShape.rotateFlipX();
+//		}
+//		else if (ev.getSource() == animFlipY) {
+//			brickShape.rotateFlipY();
+//		}
+		if (ev.getSource() == animReset) {
+			displayPart();
 		}
 		
 	}
@@ -252,8 +323,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 	
 	public void dispose() {
 		
-		brickShape.canvas.destroy();
-		brickShape.canvas = null;
+		//brickShape.destroy();
 	}
 	
 

@@ -94,6 +94,7 @@ import bricksnspace.bricklinklib.BricklinkColor;
 import bricksnspace.bricklinklib.BricklinkLib;
 import bricksnspace.bricklinklib.BricklinkPart;
 import bricksnspace.dbconnector.DBConnector;
+import bricksnspace.ldrawlib.LDrawColor;
 import bricksnspace.ldrawlib.LDrawLib;
 
 
@@ -385,6 +386,12 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		}
 		// checks for LDraw part libraries
 		ldrlib = loadLDrawLibs();
+		try {
+			LDrawColor.readFromLibrary(ldrlib);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		bricksnspace.ldrawlib.LDrawPart.setLdrlib(ldrlib);
 		initialize();
 		
 	}
@@ -1182,7 +1189,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			return;
 		fileExport.setExtension(".html");
 		HTMLExporter he = new HTMLExporter(frame,workingTableModel.getParts(), fileExport,
-				currentSet,ldrlib,icnImg);
+				currentSet,icnImg);
 		he.doExport();
 	}
 
@@ -2114,6 +2121,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			if (dlg.getResponse() == JOptionPane.OK_OPTION) {
 				workingTableModel.setValueAt(dlg.getSelected(),row ,5);
 				workShapePanel.changeColor(dlg.getSelected());
+				
 			}
 		}
 	}

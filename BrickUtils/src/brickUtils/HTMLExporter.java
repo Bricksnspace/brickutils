@@ -22,6 +22,7 @@ package brickUtils;
 
 
 
+import java.awt.Dimension;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
@@ -34,7 +35,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
-import bricksnspace.ldrawlib.LDrawLib;
+import bricksnspace.ldraw3d.LDrawGLDisplay;
+import bricksnspace.ldrawlib.LDrawException;
 
 
 public class HTMLExporter {
@@ -44,17 +46,15 @@ public class HTMLExporter {
 	private ArrayList<Brick> bricks;
 	private JFrame frame;
 	private ImageIcon[] icnImg;
-	private LDrawLib ldrlib;
 	private BrickSet currentSet;
 
 
 	HTMLExporter(JFrame owner, ArrayList<Brick> bricks, JFileChooser file, 
-			BrickSet setInfo, LDrawLib ldr, ImageIcon[] icnImg) {
+			BrickSet setInfo, ImageIcon[] icnImg) {
 		
 		this.bricks = bricks;
 		fileExport = file;
 		frame = owner;
-		ldrlib = ldr;
 		currentSet = setInfo;
 		this.icnImg = icnImg;
 	}
@@ -78,8 +78,16 @@ public class HTMLExporter {
 		File fname = fileExport.getSelectedFile();
 		BusyDialog busyDialog = new BusyDialog(frame,"Export HTML list",true,true,icnImg);
 		busyDialog.setLocationRelativeTo(frame);
-		HtmlExportTask task = new HtmlExportTask(bricks,currentSet,
-				new BrickShapeGLView(ldrlib, false,Brick.getHtmImgSize(),Brick.getHtmImgSize()),fname);
+		LDrawGLDisplay brickShape = null;
+		try {
+			LDrawGLDisplay.setAntialias(true);
+			brickShape = new LDrawGLDisplay();
+			brickShape.getCanvas().setPreferredSize(new Dimension(Brick.getHtmImgSize(),Brick.getHtmImgSize()));
+			brickShape.update();
+		} catch (LDrawException e1) {
+			e1.printStackTrace();
+		}
+		HtmlExportTask task = new HtmlExportTask(bricks,currentSet, brickShape,fname);
 		busyDialog.setTask(task);
 		busyDialog.setMsg("Writing HTML list...");
 		Timer timer = new Timer(200, busyDialog);

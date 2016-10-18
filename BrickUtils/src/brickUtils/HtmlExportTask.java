@@ -30,6 +30,8 @@ import java.util.ArrayList;
 
 import javax.swing.SwingWorker;
 
+import bricksnspace.ldraw3d.LDrawGLDisplay;
+
 
 
 /*
@@ -39,7 +41,7 @@ import javax.swing.SwingWorker;
 public class HtmlExportTask extends SwingWorker<Integer, Void> {
 
 	File html;
-	BrickShapeGLView brickShape;
+	LDrawGLDisplay brickShape;
 	BrickSet currentSet;
 	ArrayList<Brick> bricks;
 
@@ -47,7 +49,7 @@ public class HtmlExportTask extends SwingWorker<Integer, Void> {
 	 * @param blxml an XML from pyBrickUtils 
 	 * 
 	 */
-	public HtmlExportTask(ArrayList<Brick> bricks, BrickSet bs, BrickShapeGLView shape, File html) {
+	public HtmlExportTask(ArrayList<Brick> bricks, BrickSet bs, LDrawGLDisplay shape, File html) {
 		
 		this.html = html;
 		currentSet = bs;

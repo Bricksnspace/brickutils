@@ -281,7 +281,11 @@ public class BlSearch extends JDialog implements ActionListener, ListSelectionLi
 			doSearch();
 			if (tableModel.getRowCount() > 0)
 				table.setRowSelectionInterval(0, 0);
+			else 
+				brickShape.setLdrawid("");
 		}
+		else 
+			brickShape.setLdrawid("");
 		searchText.requestFocusInWindow();
 		
 	}

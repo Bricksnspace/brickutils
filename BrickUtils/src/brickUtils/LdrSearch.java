@@ -265,14 +265,18 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 			doSearch();
 			if (tableModel.getRowCount() > 0)
 				table.setRowSelectionInterval(0, 0);
+			else 
+				brickShape.setLdrawid("");
 		}
+		else 
+			brickShape.setLdrawid("");
 		searchText.requestFocusInWindow();
 	}
 	
 
 	@Override
 	public void actionPerformed(ActionEvent ev) {
-		//System.out.println(ev.toString());
+		
 		if (ev.getSource() == button || ev.getSource() == searchText) {
 			table.getRowSorter().setSortKeys(null);
 			doSearch();
@@ -401,8 +405,10 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 			return;
 		if (brickShape == null)
 			return;
-		if (table.getSelectedRow() < 0)
+		if (table.getSelectedRow() < 0) {
+			brickShape.setLdrawid("");
 			return;
+		}
 		String ldrid = (String) tableModel.getValueAt(table.convertRowIndexToModel(table.getSelectedRow()),1);
 		brickShape.setLdrawid(ldrid);
 		if (autoConvert.isSelected()) {

@@ -22,6 +22,7 @@ package brickUtils;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
@@ -52,6 +53,8 @@ import javax.swing.Timer;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
+import bricksnspace.ldraw3d.LDrawGLDisplay;
+import bricksnspace.ldrawlib.LDrawException;
 import bricksnspace.ldrawlib.LDrawLib;
 
 
@@ -266,9 +269,16 @@ public class TemplateExportDialog extends JDialog implements ActionListener {
 		velCon.put("bricks",bricks);
 		BusyDialog busyDialog = new BusyDialog((JFrame)this.getOwner(),"Export list",true,true,icnImg);
 		busyDialog.setLocationRelativeTo((JFrame)this.getOwner());
+		LDrawGLDisplay brickShape = null;
+		try {
+			LDrawGLDisplay.setAntialias(true);
+			brickShape = new LDrawGLDisplay();
+			brickShape.getCanvas().setPreferredSize(new Dimension(Brick.getHtmImgSize(),Brick.getHtmImgSize()));
+		} catch (LDrawException e1) {
+			e1.printStackTrace();
+		}
 		TemplateExportTask task = new TemplateExportTask(bricks,expSet,
-				new BrickShapeGLView(ldrlib, false,Brick.getHtmImgSize(),Brick.getHtmImgSize()),
-				velCon,templateFile,outputFile);
+				brickShape,velCon,templateFile,outputFile);
 		task.generateImages(includeImg.isSelected());
 		task.embedImages(embedImg.isSelected());
 		busyDialog.setTask(task);

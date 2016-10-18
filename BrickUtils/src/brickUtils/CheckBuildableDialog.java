@@ -403,8 +403,8 @@ public class CheckBuildableDialog extends JDialog implements ActionListener, Lis
 			BrickSet setinfo = new BrickSet();
 			setinfo.name = "Missing bricks";
 			setinfo.setid = "BrickUtils";
-			HTMLExporter he = new HTMLExporter((JFrame)topFrame, missingBricksModel.getParts(), fileExport,setinfo,
-					ldrlib, icn);
+			HTMLExporter he = new HTMLExporter((JFrame)topFrame, missingBricksModel.getParts(), 
+					fileExport,setinfo,icn);
 			he.doExport();
 		}
 		else if (e.getSource() == tmplExportButton) {
