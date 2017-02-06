@@ -29,13 +29,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
 
 import bricksnspace.ldrawlib.LDPrimitive;
 import bricksnspace.ldrawlib.LDrawColor;
 import bricksnspace.ldrawlib.LDrawCommand;
-import bricksnspace.ldrawlib.LDrawException;
 import bricksnspace.ldrawlib.LDrawLib;
 import bricksnspace.ldrawlib.LDrawParser;
 import bricksnspace.ldrawlib.LDrawPart;
@@ -56,7 +56,7 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	File ldr;
 	LDrawLib ldrlib;
 	private boolean warnings;
-	private String internalLog = "";		// internal log for errors and warnings
+//	private String internalLog = "";		// internal log for errors and warnings
 	private String mainModelName;
 	private String mainModelDescription;
 
@@ -84,21 +84,21 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	}
 
 
-	public String getInternalLog() {
-		return internalLog;
-	}
+//	public String getInternalLog() {
+//		return internalLog;
+//	}
+//
 
-
-	private void addLogLine(String file, int line, String message) {
-
-		warnings = true;
-		if (line != 0)
-			internalLog += "[" +file + "] line# "+ line + "> " + message + "\n";
-		else 
-			internalLog += "[" +file + "] >" + message + "\n";
-		//System.out.println(internalLog); // DB
-			
-	}
+//	private void addLogLine(String file, int line, String message) {
+//
+//		warnings = true;
+//		if (line != 0)
+//			internalLog += "[" +file + "] line# "+ line + "> " + message + "\n";
+//		else 
+//			internalLog += "[" +file + "] >" + message + "\n";
+//		//System.out.println(internalLog); // DB
+//			
+//	}
 	
 	
 	private void expandPrimitives(Collection<LDPrimitive> ldprim, int colorIndex) throws SQLException {
@@ -321,7 +321,8 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 		                    }
 		                    else {
 		                        //------------------- duplicate submodel name
-		                    	addLogLine(ldr.getName(), lnr.getLineNumber(), 
+		    					warnings = true;
+		    					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " +  
 		                    			"Duplicate sub-model name '" + part + "' in MPD");   
 		                        continue;
 		                    }
@@ -334,8 +335,9 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	                    break;
 					case MPDNOFILE:
 						if (!isSubModel && !isMainModel) {
-	                    	addLogLine(ldr.getName(), lnr.getLineNumber(), 
-	                    			"Displaced 'NOFILE' in MPD");   
+							warnings = true;
+							Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+									"Displaced 'NOFILE' in MPD");   
 						}
 						if (isSubModel && !isMainModel) {
 							subModel.setPartType(partType);
@@ -384,14 +386,17 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 						break;
 					default:
 						if (!isSubModel && !isMainModel) {
-							addLogLine(ldr.getName(), lnr.getLineNumber(), 
-	                    			"Invalid MPD file format: primitive or command outside FILE..NOFILE block:"+line );
+							warnings = true;
+							Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+									"Invalid MPD file format: primitive or command outside FILE..NOFILE block:\n"+line );
 						}
 						break;
 					}
 				}
-				catch (LDrawException exc) {
-					addLogLine(ldr.getName(), lnr.getLineNumber(), exc.getLocalizedMessage());
+				catch (IllegalArgumentException exc) {
+					warnings = true;
+					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+							exc.getLocalizedMessage());
 				}
 				if (isSubModel && ! isMainModel) {
 					subModel.setPartType(partType);
@@ -460,13 +465,15 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	                    		subModel.addPart(p);
 	                    	}
 	                    	else { 
-								addLogLine(ldr.getName(), lnr.getLineNumber(), 
-		                    			"Invalid MPD file format: primitive or command outside FILE..NOFILE block:"+line );
+	        					warnings = true;
+	        					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+	        							"Invalid MPD file format: primitive or command outside FILE..NOFILE block:\n"+line );
 	                    	}
 	                    }
 	                    else {
-                    		addLogLine(subModel.getDescription(), lnr.getLineNumber(), 
-	                        			"Unknown submodel or part: "+p.getLdrawId());
+	    					warnings = true;
+	    					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+	    							"Unknown submodel or part: "+p.getLdrawId());
 	                    }
 						break;
 					case TRIANGLE: 
@@ -478,8 +485,10 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 						break;
 					}
 				}
-				catch (LDrawException exc) {
-					addLogLine(ldr.getName(), lnr.getLineNumber(), exc.getLocalizedMessage());
+				catch (IllegalArgumentException exc) {
+					warnings = true;
+					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+							exc.getLocalizedMessage());
 				}
 			}
 			try {
@@ -509,8 +518,9 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	                		File ld = new File(modelDir,p.getLdrawId());
 	                		if (!ld.exists()) {
 	                			// old part or error in file
-	                        	addLogLine(ldr.getName(), lnr.getLineNumber(), 
-	                        			"Unknown part: "+p.getLdrawId());   
+	        					warnings = true;
+	        					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+	        							"Unknown part: "+p.getLdrawId());   
 	                		}
 	                		else {
 	                			//System.out.println("SubModel: " + part);
@@ -546,8 +556,10 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 						break;
 					}
 				}
-				catch (LDrawException exc) {
-					addLogLine(ldr.getName(), lnr.getLineNumber(), exc.getLocalizedMessage());
+				catch (IllegalArgumentException exc) {
+					warnings = true;
+					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+							exc.getLocalizedMessage());
 				}
 			}
 			try {
@@ -583,8 +595,9 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	            		File subFile = new File(modelDir,p.getLdrawId());
 	            		if (!subFile.exists() || !subFile.canRead()) {
 	            			// old part or error in file
-	                    	addLogLine(ldr.getName(), lnr.getLineNumber(), 
-	                    			"Unknown part: "+p.getLdrawId());   
+	    					warnings = true;
+	    					Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+	    							"Unknown part: "+p.getLdrawId());   
 	            		}
 	            		else {
 	            			//System.out.println("SubModel: " + part); // DB
@@ -621,8 +634,10 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 					break;
 				}
 			}
-			catch (LDrawException exc) {
-				addLogLine(ldr.getName(), lnr.getLineNumber(), exc.getLocalizedMessage());
+			catch (IllegalArgumentException exc) {
+				warnings = true;
+				Logger.getGlobal().warning("[" +ldr.getName() + "] line# "+ lnr.getLineNumber() +  "> " + 
+						exc.getLocalizedMessage());
 			}
 		}
 		model.setPartType(partType);

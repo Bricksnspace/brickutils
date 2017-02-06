@@ -29,6 +29,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.media.opengl.GLException;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -36,7 +37,6 @@ import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
 import bricksnspace.ldraw3d.LDrawGLDisplay;
-import bricksnspace.ldrawlib.LDrawException;
 
 
 public class HTMLExporter {
@@ -84,7 +84,7 @@ public class HTMLExporter {
 			brickShape = new LDrawGLDisplay();
 			brickShape.getCanvas().setPreferredSize(new Dimension(Brick.getHtmImgSize(),Brick.getHtmImgSize()));
 			brickShape.update();
-		} catch (LDrawException e1) {
+		} catch (GLException e1) {
 			e1.printStackTrace();
 		}
 		HtmlExportTask task = new HtmlExportTask(bricks,currentSet, brickShape,fname);

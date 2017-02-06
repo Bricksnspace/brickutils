@@ -37,6 +37,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.media.opengl.GLException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -54,7 +55,6 @@ import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
 import bricksnspace.ldraw3d.LDrawGLDisplay;
-import bricksnspace.ldrawlib.LDrawException;
 import bricksnspace.ldrawlib.LDrawLib;
 
 
@@ -274,7 +274,7 @@ public class TemplateExportDialog extends JDialog implements ActionListener {
 			LDrawGLDisplay.setAntialias(true);
 			brickShape = new LDrawGLDisplay();
 			brickShape.getCanvas().setPreferredSize(new Dimension(Brick.getHtmImgSize(),Brick.getHtmImgSize()));
-		} catch (LDrawException e1) {
+		} catch (GLException e1) {
 			e1.printStackTrace();
 		}
 		TemplateExportTask task = new TemplateExportTask(bricks,expSet,

@@ -47,6 +47,10 @@ import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.prefs.BackingStoreException;
 import java.util.zip.ZipFile;
 
@@ -239,6 +243,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	private JMenuItem mntmTemplateExport;
 	private JFileChooser fileVelocity;
 	private JFileChooser fileTemplateExport;
+	private FileHandler logFile;
 	
 
 	
@@ -265,22 +270,18 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		
 		AppVersion.setMyVersion("0.2.2");
 		
-		// write all messages on a file
-		// XXX remove comments before release
-//		try {
-//			File l = new File(appName+".log");
-//			if (l.exists()) {
-//				File o = new File(appName+"-1.log");
-//				// delete old log, if any
-//				if (o.exists())
-//					o.delete();
-//				l.renameTo(o);
-//			}
-//			System.setErr(new PrintStream(l));
-//		} catch (FileNotFoundException e2) {
-//			e2.printStackTrace();
-//		}
-		
+		// logging system init
+		try {
+			logFile = new FileHandler(appName+"-%g.log",0,3);
+			logFile.setLevel(Level.ALL);
+			logFile.setFormatter(new SimpleFormatter());
+			Logger.getGlobal().addHandler(logFile);
+			Logger.getGlobal().log(Level.INFO, "Logger started");
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
 		// images for busy animation
 		icnImg[0] = new ImageIcon(this.getClass().getResource("images/f0.png"));
 		icnImg[1] = new ImageIcon(this.getClass().getResource("images/f1.png"));
@@ -1124,6 +1125,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			e.printStackTrace();
 		}
 		frame.dispose();
+//		logFile.flush();
 		System.exit(0);
 	}
 	
@@ -1151,6 +1153,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			catch (IOException e) {
 				JOptionPane.showMessageDialog(frame, "Unable to load LDraw libraries\nReason: "+e.getLocalizedMessage()+"\nExiting now...", 
 						"Library error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"LDraw Library error", e);
 				System.exit(1);
 			}
 		}
@@ -1285,7 +1288,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			Integer r = task.get(10, TimeUnit.MILLISECONDS);
 			if (task.isWarnings()) {
-				JOptionPane.showMessageDialog(frame, "Imported "+r+" bricks, but\nthere are some errors:\n"+task.getInternalLog(), 
+				JOptionPane.showMessageDialog(frame, "Imported "+r+" bricks, but\nthere are some errors. See logs for details.", 
 						"LDraw import warnings",JOptionPane.WARNING_MESSAGE);
 			}
 			else {

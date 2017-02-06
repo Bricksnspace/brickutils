@@ -28,6 +28,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 
+import javax.media.opengl.GLException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -38,7 +39,6 @@ import bricksnspace.ldraw3d.LDRenderedPart;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
 import bricksnspace.ldrawlib.LDPrimitive;
 import bricksnspace.ldrawlib.LDrawColor;
-import bricksnspace.ldrawlib.LDrawException;
 import bricksnspace.ldrawlib.LDrawLib;
 import bricksnspace.ldrawlib.LDrawPartType;
 
@@ -99,7 +99,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 			brickShape = new LDrawGLDisplay();
 			brickShape.getCanvas().setPreferredSize(new Dimension(size,size));
 			brickShape.update();
-		} catch (LDrawException e) {
+		} catch (GLException e) {
 			brickShape = null;
 			e.printStackTrace();
 		}
