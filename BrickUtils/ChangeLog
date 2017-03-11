@@ -1,3 +1,8 @@
+2017-03-10  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/Brick.java (Brick): removed references to BrickException 
+	* src/brickUtils/brickUtils.java: cleanup exception handling code with log
+	 
 2015-02-04  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/HtmlExportTask.java (doInBackground): removed local HTML color notation generation

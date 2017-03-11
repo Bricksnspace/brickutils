@@ -53,7 +53,7 @@ public class CheckUpdate extends SwingWorker<Integer[], Void> {
 	
 	
 	@Override
-	protected Integer[] doInBackground() throws SQLException, IOException, XMLStreamException, BrickException {
+	protected Integer[] doInBackground() throws SQLException, IOException, XMLStreamException {
 
 		int totparts=0, totcolors=0;
 		

@@ -109,7 +109,7 @@ public class BrickColor {
 
 	
 	
-	public BrickColor(StartElement xsr) throws BrickException {
+	public BrickColor(StartElement xsr) {
 		
 		try {
 			mapid = Integer.parseInt(xsr.getAttributeByName(new QName("id")).getValue());
@@ -128,10 +128,8 @@ public class BrickColor {
 			colorGroup = Integer.parseInt(xsr.getAttributeByName(new QName("group")).getValue());
 			notes = xsr.getAttributeByName(new QName("notes")).getValue();
 			lastmod = Timestamp.valueOf(xsr.getAttributeByName(new QName("lastmod")).getValue());
-		} catch (NumberFormatException e) {
-			throw new BrickException("Error in update file format");
-		} catch (NullPointerException e) {
-			throw new BrickException("Error in update file format");
+		} catch (NumberFormatException | NullPointerException e) {
+			throw new IllegalArgumentException("Error in file format. Opening tag:\n"+xsr,e);
 		}
 	}
 
@@ -346,8 +344,8 @@ public class BrickColor {
 	}
 	
 	
-	
-	public void check() throws SQLException, BrickException {
+	// FIXME: remove all references to BrickException
+	public void check() throws SQLException, IllegalStateException {
 		
 		Statement st;
 		ResultSet rs;
@@ -365,7 +363,7 @@ public class BrickColor {
 			int lddid = rs.getInt("ldd");
 			int blid = rs.getInt("bl");
 			int ldrawid = rs.getInt("ldraw");
-			throw new BrickException(
+			throw new IllegalStateException(
 					"Duplicated color definition. Color:\n" +
 					"Ldd="+ldd+" Bl="+bl+" LDraw="+ldraw +"\n" +
 					"is already defined as:\n" +

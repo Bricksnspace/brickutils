@@ -58,7 +58,7 @@ public class ImportLddProjectTask extends SwingWorker<Integer, Void> {
 	
 	
 	@Override
-	protected Integer doInBackground() throws SQLException, IOException, XMLStreamException, BrickException {
+	protected Integer doInBackground() throws SQLException, IOException, XMLStreamException {
 		
 		int i = 0;
 		int bricks = 0, color, quantity;

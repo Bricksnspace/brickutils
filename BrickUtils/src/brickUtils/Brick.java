@@ -176,7 +176,7 @@ public class Brick {
     
     
     
-    Brick(StartElement xse) throws BrickException {
+    Brick(StartElement xse) {
     	
     	try {
 	    	id = Integer.parseInt(xse.getAttributeByName(new QName("id")).getValue());
@@ -204,10 +204,8 @@ public class Brick {
 	    	extra = xse.getAttributeByName(new QName("extra")).getValue().equals("1");
 	    	alt = xse.getAttributeByName(new QName("alt")).getValue().equals("1");
 	    	matchid = Integer.parseInt(xse.getAttributeByName(new QName("matchid")).getValue());
-    	} catch (NumberFormatException e) {
-    		throw new BrickException("Error in BrickUtils backup file format");
-    	} catch (NullPointerException e) {
-    		throw new BrickException("Error in BrickUtils backup file format");
+    	} catch (NumberFormatException | NullPointerException e) {
+    		throw new IllegalArgumentException("Error in BrickUtils backup file format. Opening tag:\n"+xse,e);
     	}
     }
     

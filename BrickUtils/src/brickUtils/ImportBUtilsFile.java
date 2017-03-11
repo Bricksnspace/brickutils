@@ -55,7 +55,7 @@ public class ImportBUtilsFile extends SwingWorker<Integer[], Void> {
 	
 	
 	@Override
-	protected Integer[] doInBackground() throws SQLException, IOException, XMLStreamException, BrickException {
+	protected Integer[] doInBackground() throws SQLException, IOException, XMLStreamException {
 		
 		int i = 0;
 		int sets = 0, bricks = 0;

@@ -429,7 +429,7 @@ public class BrickSet {
 
 	
 	
-	public BrickSet(StartElement xse) throws BrickException {
+	public BrickSet(StartElement xse) {
 		
 		try {
 			id = Integer.parseInt(xse.getAttributeByName(new QName("id")).getValue());
@@ -448,10 +448,8 @@ public class BrickSet {
 			notes = xse.getAttributeByName(new QName("notes")).getValue();
 			available = xse.getAttributeByName(new QName("available")).getValue().equals("1");
 			selected = xse.getAttributeByName(new QName("selected")).getValue().equals("1");
-    	} catch (NumberFormatException e) {
-    		throw new BrickException("Error in BrickUtils backup file format");
-    	} catch (NullPointerException e) {
-    		throw new BrickException("Error in BrickUtils backup file format");
+    	} catch (NumberFormatException | NullPointerException e) {
+    		throw new IllegalArgumentException("Error in BrickUtils backup file format. Opening tag:\n"+xse,e);
     	}
 	}
 	

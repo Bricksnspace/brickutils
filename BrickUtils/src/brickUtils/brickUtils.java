@@ -52,7 +52,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.prefs.BackingStoreException;
-import java.util.zip.ZipFile;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -99,6 +98,7 @@ import bricksnspace.bricklinklib.BricklinkLib;
 import bricksnspace.bricklinklib.BricklinkPart;
 import bricksnspace.dbconnector.DBConnector;
 import bricksnspace.ldrawlib.LDrawColor;
+import bricksnspace.ldrawlib.LDrawDBImportTask;
 import bricksnspace.ldrawlib.LDrawLib;
 
 
@@ -268,7 +268,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	
 	public brickUtils() {
 		
-		AppVersion.setMyVersion("0.2.2");
+		AppVersion.setMyVersion("0.3.0");
 		
 		// logging system init
 		try {
@@ -278,7 +278,6 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			Logger.getGlobal().addHandler(logFile);
 			Logger.getGlobal().log(Level.INFO, "Logger started");
 		} catch (IOException e2) {
-			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
 
@@ -331,7 +330,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 						db, dlg);
 			} catch (MalformedURLException e1) {
 				JOptionPane.showMessageDialog(null, "Problem with SF database URL","Internal error",JOptionPane.ERROR_MESSAGE);
-				e1.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"Error reading database download URL",e1);
 				System.exit(1);
 			}
 			dlg.setTask(task);
@@ -350,15 +349,15 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				JOptionPane.showMessageDialog(null, "Unable to download Database from Internet\nReason: "+e.getLocalizedMessage()+
 						"\nPlease retry later.", 
 						"Download error",JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"Error downloading database",e);
 				System.exit(1);
 			} catch (InterruptedException e) {
 				JOptionPane.showMessageDialog(null, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"Database download interrupted",e);
 				System.exit(1);
 			} catch (TimeoutException e) {
 				JOptionPane.showMessageDialog(null, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"Unknown error in database downloading",e);
 				System.exit(1);
 			}
 		}
@@ -390,7 +389,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			LDrawColor.readFromLibrary(ldrlib);
 		} catch (IOException e) {
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"Error reading color definitions from LDraw library",e);
 		}
 		bricksnspace.ldrawlib.LDrawPart.setLdrlib(ldrlib);
 		initialize();
@@ -941,13 +940,15 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			catch (ExecutionException ex) {
 				int response = JOptionPane.showConfirmDialog(frame, "Program is not fully functional\nReason: "+
 						ex.getLocalizedMessage() + "\nContinue anyway?", "Program init error",JOptionPane.OK_CANCEL_OPTION,JOptionPane.ERROR_MESSAGE);
-				ex.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"Unable to init database",ex);
 				if (response != JOptionPane.OK_OPTION) 
 					System.exit(1);
 			} catch (InterruptedException e1) {
 				JOptionPane.showMessageDialog(frame, "Task interrupted!\n Reason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Unable to init database, interrupted",e1);
 			} catch (TimeoutException e1) {
 				JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\n Reason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Unable to init database, timeout",e1);
 			}
 			// place here all db setup in classes
 			try {
@@ -964,6 +965,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			}
 			catch (SQLException ex) {
 				JOptionPane.showMessageDialog(frame, "Problems with database\n Reason: "+ex.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Unable to init database",ex);
 			}
 			return;
 		}
@@ -1064,6 +1066,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			} catch (SQLException e1) {
 				JOptionPane.showMessageDialog(frame, "Problems with database\n Reason: "+e1.getLocalizedMessage(), 
 						"Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[btnSetData] Database error",e1);
 			}
 		}
 		else if (e.getSource() == btnAddToSet) {
@@ -1115,14 +1118,12 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			brickDB.conn.close();
 		} catch (SQLException e1) {
-			;
+			Logger.getGlobal().log(Level.SEVERE,"Error closing connection with database",e1);
 		}
 		try {
 			AppSettings.savePreferences();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (BackingStoreException e) {
-			e.printStackTrace();
+		} catch (IOException | BackingStoreException e) {
+			Logger.getGlobal().log(Level.SEVERE,"Unable to save preferences",e);
 		}
 		frame.dispose();
 //		logFile.flush();
@@ -1147,10 +1148,10 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		}
 		else {
 			try {
-				ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH));
+				ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH),dbc);
 				ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
 			}
-			catch (IOException e) {
+			catch (IOException | SQLException e) {
 				JOptionPane.showMessageDialog(frame, "Unable to load LDraw libraries\nReason: "+e.getLocalizedMessage()+"\nExiting now...", 
 						"Library error",JOptionPane.ERROR_MESSAGE);
 				Logger.getGlobal().log(Level.SEVERE,"LDraw Library error", e);
@@ -1252,7 +1253,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doNewList] Database error",e);
 		}
 		
 	}
@@ -1299,17 +1300,17 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		catch (ExecutionException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to read LDraw project\nReason: "+e.getLocalizedMessage(), 
 					"Import error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLrawProject] LDraw import error, file:"+fname,e);
 		} catch (InterruptedException e) {
 			JOptionPane.showMessageDialog(frame, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLrawProject] Interrupted task",e);
 		} catch (TimeoutException e) {
 			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLrawProject] Timeout error",e);
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLrawProject] Database error",e);
 		}
 		refreshWorkList();
 	
@@ -1352,22 +1353,23 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		catch (ExecutionException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to read LDD project\nReason: "+e.getLocalizedMessage(), 
 					"Import error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLddProject] LDD import error, file:"+fname,e);
 		} catch (InterruptedException e) {
 			JOptionPane.showMessageDialog(frame, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLddProject] Import error",e);
 		} catch (TimeoutException e) {
 			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLddProject] Task timeout error",e);
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLddProject] Database error",e);
 		}
 		refreshWorkList();
 	
 	}
 
+	
 
 	private void doImportSet() {
 		
@@ -1381,7 +1383,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		busyDialog.setLocationRelativeTo(frame);
 		ImportBUtilsFile task = new ImportBUtilsFile(fname);
 		busyDialog.setTask(task);
-		busyDialog.setMsg("Reading pyBrickUtils brick catalog XML file...");
+		busyDialog.setMsg("Reading BrickUtils brick catalog XML file...");
 		Timer timer = new Timer(200, busyDialog);
 		task.execute();
 		timer.start();
@@ -1396,13 +1398,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		catch (ExecutionException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to read parts\nReason: "+e.getLocalizedMessage(), 
 					"Import error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportSet] Set import error, file:"+fname,e);
 		} catch (InterruptedException e) {
 			JOptionPane.showMessageDialog(frame, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportSet] Task interrupted",e);
 		} catch (TimeoutException e) {
 			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportSet] Task timeout",e);
 		}
 		refreshSetList();
 		refreshCatalogList();
@@ -1450,15 +1452,15 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (XMLStreamException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to write export file\nReason: "+e.getLocalizedMessage(), 
 					"XML I/O error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doExportSet] XML stream error error, file:"+fileExport.getSelectedFile(),e);
 		} catch (IOException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to write export file\nReason: "+e.getLocalizedMessage(), 
 					"I/O error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doExportSet] Export I/O error, file:"+fileExport.getSelectedFile(),e);
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doExportSet] Database error",e);
 		}
 	}
 
@@ -1472,7 +1474,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			ArrayList<BrickSet> bs = BrickSet.getByBrick(b.id);
 			if (bs.size() == 0)
-				throw new BrickException("Program error: inconsistency in brick catalog, brick doesn't belong to any set");
+				throw new IllegalStateException("Program error: inconsistency in brick catalog, brick doesn't belong to any set");
 			BrickSet.clearSelection();
 			for (BrickSet s : bs) {
 				s.select();
@@ -1482,11 +1484,11 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
-		} catch (BrickException e) {
+			Logger.getGlobal().log(Level.SEVERE,"[doSelectWhichSet] Database error",e);
+		} catch (IllegalStateException e) {
 			JOptionPane.showMessageDialog(frame, e.getLocalizedMessage(), 
 					"Internal error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doSelectWhichSet] Internal error, part:"+b,e);
 		}
 		refreshSetList();
 	}
@@ -1527,15 +1529,15 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			catch (ExecutionException ex) {
 				JOptionPane.showMessageDialog(frame, "Unable to read parts\nReason: "+ex.getLocalizedMessage(), 
 						"Import error",JOptionPane.ERROR_MESSAGE);
-				ex.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"[doPyBrickImport] Parts import error, file:"+fname,ex);
 				return;
 			} catch (InterruptedException e1) {
 				JOptionPane.showMessageDialog(frame, "Task interrupted!\n Reason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-				e1.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"[doPyBrickImport] Interrupted task, file:"+fname,e1);
 				return;
 			} catch (TimeoutException e1) {
 				JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-				e1.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"[doPyBrickImport] Task timeout, file:"+fname,e1);
 				return;
 			}
 			fileBl.setDialogTitle("Select pyBrickUtils set file");
@@ -1562,13 +1564,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				catch (ExecutionException ex) {
 					JOptionPane.showMessageDialog(frame, "Unable to read sets\nReason: "+ex.getLocalizedMessage(), 
 							"Import error",JOptionPane.ERROR_MESSAGE);
-					ex.printStackTrace();
+					Logger.getGlobal().log(Level.SEVERE,"[doPyBrickImport] Set import error, file:"+fname,ex);
 				} catch (InterruptedException e1) {
 					JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-					e1.printStackTrace();
+					Logger.getGlobal().log(Level.SEVERE,"[doPyBrickImport] Interrupted task, file:"+fname,e1);
 				} catch (TimeoutException e1) {
 					JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-					e1.printStackTrace();
+					Logger.getGlobal().log(Level.SEVERE,"[doPyBrickImport] Task timeout, file:"+fname,e1);
 				}
 			}
 			refreshSetList();
@@ -1612,7 +1614,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			workingTableModel.setParts(Brick.getWork());
 		} catch (SQLException e1) {
-			;
+			Logger.getGlobal().log(Level.SEVERE,"[refreshWorkList] Database error",e1);
 		}
 	}
 	
@@ -1623,7 +1625,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			catalogTableModel.setParts(Brick.catalogGet());
 		} catch (SQLException e1) {
-			;
+			Logger.getGlobal().log(Level.SEVERE,"[refreshCatalogList] Database error",e1);
 		}
 	}
 	
@@ -1633,7 +1635,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		try {
 			setTableModel.setParts(BrickSet.get());
 		} catch (SQLException e1) {
-			;
+			Logger.getGlobal().log(Level.SEVERE,"[refreshSetList] Database error",e1);
 		}
 	}
 	
@@ -1669,7 +1671,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doMoveSet] Database error",e);
 		}
 		refreshSetList();
 		refreshWorkList();
@@ -1709,7 +1711,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doCopySet] Database error",e);
 		}
 		refreshSetList();
 		refreshWorkList();
@@ -1734,6 +1736,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doDeleteSet] Database error",e);
 		}
 		refreshSetList();
 		refreshCatalogList();
@@ -1755,11 +1758,10 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		// after completing task return here
 		timer.stop();
 		try {
+			// official parts
 			Integer[] i = chk.get(10, TimeUnit.MILLISECONDS);
-			ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH));
-			ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
-			ImportLdrawPartsTask ldrTask = new ImportLdrawPartsTask(
-					new ZipFile(AppSettings.get(MySettings.LDR_LIB_PATH)), true);
+			ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH),dbc);
+			LDrawDBImportTask ldrTask = new LDrawDBImportTask(ldl,ldl.getLdrDB(),LDrawLib.OFFICIALINDEX);
 			dlg.setMsg("Updates official parts DB");
 			dlg.setProgress(0);
 			timer = new Timer(300,dlg);
@@ -1769,8 +1771,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			timer.start();
 			dlg.setVisible(true);
 			Integer numOff = ldrTask.get(100, TimeUnit.MILLISECONDS);
-			ldrTask = new ImportLdrawPartsTask(
-					new ZipFile(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH)), false);
+			// unofficial parts
+			int index = ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
+			ldrTask = new LDrawDBImportTask(ldl,ldl.getLdrDB(),index);
 			dlg.setMsg("Updates unofficial parts DB");
 			dlg.setProgress(0);
 			dlg.setTask(ldrTask);
@@ -1792,17 +1795,22 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		catch (ExecutionException ex) {
 			JOptionPane.showMessageDialog(frame, "Unable to get updates\nReason: "+ex.getLocalizedMessage(), 
 					"Update error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Update error, library file:"+MySettings.LDR_LIB_PATH+
+					" - "+MySettings.LDR_UNOFF_LIB_PATH,ex);
 		} catch (InterruptedException e1) {
 			JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-			e1.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Task interrupted",e1);
 		} catch (CancellationException ex) {
 			JOptionPane.showMessageDialog(frame,"Cancelled by user\nReason: "+ex.getLocalizedMessage(), "Task cancelled",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.WARNING,"[doImportLdrParts] User cancel task",ex);
 		} catch (TimeoutException e1) {
 			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-			e1.printStackTrace();
-		} catch (IOException e) {
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Task timeout",e1);
+		} catch (IOException | SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Update failed\n"+e.toString()+"\nYou may need to retry.", 
 					"File error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Update error, library file:"+MySettings.LDR_LIB_PATH+
+					" - "+MySettings.LDR_UNOFF_LIB_PATH,e);
 		}
 		return ldl;
 	}
@@ -1854,6 +1862,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(frame, "Problem adding set\n"+e.toString(), 
 						"Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doAddToSet] Database error",e);
 			}
 		
 		}
@@ -1869,7 +1878,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Problems with database\nReason: "+e.getLocalizedMessage(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE,"[updateDetails] Database error",e);
 		}
 		if (currentSet != null) {
 			setid.setText(currentSet.setid);
@@ -1932,10 +1941,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		catch (ExecutionException ex) {
 			JOptionPane.showMessageDialog(frame, "Unable to get updates\nReason: "+ex.getLocalizedMessage(), 
 					"Update error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[checkUpdate] Unable to check/get updates",ex);
 		} catch (InterruptedException e1) {
 			JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[checkUpdate] Task interrupted",e1);
 		} catch (TimeoutException e1) {
 			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[checkUpdate] Task timeout",e1);
 		}
 		busyDialog.dispose();
 	}
@@ -1965,6 +1977,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to delete part\n"+e.toString(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doDelBrick] Database error",e);
 		}
 	}
 	
@@ -1998,6 +2011,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				row = 0;
 				JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doAddBrickLdd] Database error",e);
 			}
 			workingTable.setRowSelectionInterval(row, row);
 			workingTable.scrollRectToVisible(workingTable.getCellRect(row,0, true)); 
@@ -2038,6 +2052,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				row = 0;
 				JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doAddBrickBl] Database error",e);
 			}
 			workingTable.setRowSelectionInterval(row, row);
 			workingTable.scrollRectToVisible(workingTable.getCellRect(row,0, true)); 
@@ -2077,6 +2092,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				row = 0;
 				JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doAddBrickLdr] Database error",e);
 			}
 			workingTable.setRowSelectionInterval(row, row);
 			workingTable.scrollRectToVisible(workingTable.getCellRect(row,0, true)); 
@@ -2098,6 +2114,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		} catch (SQLException e) {
 			JOptionPane.showMessageDialog(frame, "Unable to add part mapping in database\n"+e.toString(), 
 					"Database error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doDupBrick] Database error",e);
 		}
 		//partScrollPane.getVerticalScrollBar().setValue(partScrollPane.getVerticalScrollBar().getMinimum());
 		// partScrollPane.getVerticalScrollBar().setValue(partScrollPane.getVerticalScrollBar().getMaximum());
@@ -2158,19 +2175,22 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				try {
 					BricklinkPart.abortUpdate();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					Logger.getGlobal().log(Level.SEVERE,"[doImportBlParts] Database error",e);
 				}
 				JOptionPane.showMessageDialog(frame, "Unable to update\nReason: "+ex.getLocalizedMessage(), 
 						"Update error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlParts] Import error, file:"+fname,ex);
 			} catch (InterruptedException e1) {
 				JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
 				try {
 					BricklinkPart.abortUpdate();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					Logger.getGlobal().log(Level.SEVERE,"[doImportBlParts] Database error",e);
 				}
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlParts] Task interrupted",e1);
 			} catch (TimeoutException e1) {
 				JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlParts] Task timeout",e1);
 			}
 		}
 		
@@ -2206,10 +2226,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			catch (ExecutionException ex) {
 				JOptionPane.showMessageDialog(frame, "Unable to update\nReason: "+ex.getLocalizedMessage(), 
 						"Update error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlSets] Import error, file:"+fname,ex);
 			} catch (InterruptedException e1) {
 				JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlSets] Task interrupted",e1);
 			} catch (TimeoutException e1) {
 				JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlSets] Task timeout",e1);
 			}
 		}
 	}
@@ -2227,20 +2250,20 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			int i;
 			try {
 				i = bs.doImport(fname);
+				JOptionPane.showMessageDialog(frame, "Imported "+i+" Bricklink color", "Task Complete",JOptionPane.INFORMATION_MESSAGE);
 			} catch (IOException e) {
 				JOptionPane.showMessageDialog(frame, "Unable to read file: "+fname.getPath()+"\nReason: "+
 						e.getLocalizedMessage(), "File error",JOptionPane.ERROR_MESSAGE);
-				return;
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlColors] File read error, file:"+fname,e);
 			} catch (XMLStreamException e) {
 				JOptionPane.showMessageDialog(frame, "Unable to read file: "+fname.getPath()+"\nReason: "+
 						e.getLocalizedMessage(), "File error",JOptionPane.ERROR_MESSAGE);
-				return;
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlColors] XML read error, file:"+fname,e);
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
-				return;
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlColors] Database error",e);
 			}
-			JOptionPane.showMessageDialog(frame, "Imported "+i+" Bricklink color", "Task Complete",JOptionPane.INFORMATION_MESSAGE);
 		}
 	}
 
@@ -2276,10 +2299,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			catch (ExecutionException ex) {
 				JOptionPane.showMessageDialog(frame, "Unable to update\nReason: "+ex.getLocalizedMessage(), 
 						"Update error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlCategories] File read error, file:"+fname,ex);
 			} catch (InterruptedException e1) {
 				JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlCategories] Task interrupted",e1);
 			} catch (TimeoutException e1) {
 				JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[doImportBlCategories] Task timeout",e1);
 			}
 		}
 	}
@@ -2320,6 +2346,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 						} catch (SQLException e) {
 							JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 									e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
+							Logger.getGlobal().log(Level.SEVERE,"[doSearchLdd] Database error",e);
 						}
 					}
 					
@@ -2377,7 +2404,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 						} catch (SQLException e) {
 							JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 									e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
-							e.printStackTrace();
+							Logger.getGlobal().log(Level.SEVERE,"[doSearchBl] Database error",e);
 						}
 					}
 					
@@ -2427,10 +2454,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 						} catch (SQLException e) {
 							JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 									e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
-							e.printStackTrace();
+							Logger.getGlobal().log(Level.SEVERE,"[doSearchLdr] Database error",e);
 						}
 					}
-					
 				}
 				else {
 					workingTableModel.setValueAt(ldr.ldrid, row,4);
@@ -2485,10 +2511,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			catch (ExecutionException ex) {
 				JOptionPane.showMessageDialog(frame, "Unable to read parts\nReason: "+ex.getLocalizedMessage(), 
 						"Import error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[do_ImportBlXml] Import error, file:"+fname,ex);
 			} catch (InterruptedException e1) {
 				JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[do_ImportBlXml] Task interrupted error",e1);
 			} catch (TimeoutException e1) {
 				JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[do_ImportBlXml] Task timeout",e1);
 			}
 			try {
 				BlImportDialog dlg = new BlImportDialog(frame, "Imported brick list", true);
@@ -2497,6 +2526,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			} catch (SQLException e1) {
 				JOptionPane.showMessageDialog(frame, "Problem with database.\nReason: "+
 						e1.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"[do_ImportBlXml] Database error",e1);
 			}
 		}
 
@@ -2518,6 +2548,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 					brickUtils window = new brickUtils();
 					window.frame.setVisible(true);
 				} catch (Exception e) {
+					Logger.getGlobal().log(Level.SEVERE,"[main] Exception in main",e);
 					e.printStackTrace();
 				}
 			}

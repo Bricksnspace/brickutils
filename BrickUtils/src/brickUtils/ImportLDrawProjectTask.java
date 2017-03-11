@@ -241,7 +241,7 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 	
 	
 	@Override
-	protected Integer doInBackground() throws SQLException, IOException, BrickException {
+	protected Integer doInBackground() throws SQLException, IOException {
 		
 		//int color;
 		boolean isMpd;

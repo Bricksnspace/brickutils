@@ -98,7 +98,7 @@ public class PartMapping {
     
     
     
-    public PartMapping(StartElement xsr) throws BrickException {
+    public PartMapping(StartElement xsr) {
 
     	try {
 	    	mapid = Integer.parseInt(xsr.getAttributeByName(new QName("id")).getValue());
@@ -127,10 +127,8 @@ public class PartMapping {
 	    	bl2dat = xsr.getAttributeByName(new QName("bl2dat")).getValue().equals("1");
 	    	dat2bl = xsr.getAttributeByName(new QName("dat2bl")).getValue().equals("1");
 	    	lastmod = Timestamp.valueOf(xsr.getAttributeByName(new QName("lastmod")).getValue());
-    	} catch (NumberFormatException e) {
-    		throw new BrickException("Error in update file format");
-    	} catch (NullPointerException e) {
-    		throw new BrickException("Error in update file format");
+    	} catch (NumberFormatException | NullPointerException e) {
+    		throw new IllegalArgumentException("Error in update file format. Opening tag:\n"+xsr, e);
     	}
     }
 
@@ -665,7 +663,7 @@ public class PartMapping {
 	
 	
 	
-	public void check() throws SQLException, BrickException {
+	public void check() throws SQLException {
 		
 		Statement st;
 		ResultSet rs;
@@ -684,7 +682,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String bl = rs.getString("blid");
-				throw new BrickException("Duplicated part\n"+
+				throw new IllegalStateException("Duplicated part\n"+
 						"Design ID: "+designid+"->"+
 						"BLink ID:  "+blid+"\n"+
 						"is already mapped as\n"+
@@ -706,7 +704,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String ldraw = rs.getString("ldrawid");
-				throw new BrickException("Duplicated part\n"+
+				throw new IllegalStateException("Duplicated part\n"+
 						"Design ID: "+designid+"->"+
 						"LDraw ID:  "+ldrawid+"\n"+
 						"is already mapped as\n"+
@@ -728,7 +726,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String bl = rs.getString("blid");
-				throw new BrickException("Duplicated part\n"+
+				throw new IllegalStateException("Duplicated part\n"+
 						"BLink ID: "+blid+"->"+
 						"Design ID:  "+designid+"\n"+
 						"is already mapped as\n"+
@@ -750,7 +748,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String ldraw = rs.getString("ldrawid");
-				throw new BrickException("Duplicated part\n"+
+				throw new IllegalStateException("Duplicated part\n"+
 						"LDRaw ID: "+ldrawid+"->"+
 						"Design ID:  "+designid+"\n"+
 						"is already mapped as\n"+
@@ -770,7 +768,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String ldraw = rs.getString("ldrawid");
 				String bl = rs.getString("blid");
-				throw new BrickException("Duplicated part\n"+
+				throw new IllegalStateException("Duplicated part\n"+
 						"BLink ID: "+blid+"->"+
 						"LDraw ID:  "+ldrawid+"\n"+
 						"is already mapped as\n"+
@@ -790,7 +788,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String bl = rs.getString("blid");
 				String ldraw = rs.getString("ldrawid");
-				throw new BrickException("Duplicated part\n"+
+				throw new IllegalStateException("Duplicated part\n"+
 						"LDRaw ID: "+ldrawid+"->"+
 						"BLink ID:  "+blid+"\n"+
 						"is already mapped as\n"+

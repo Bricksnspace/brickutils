@@ -59,7 +59,7 @@ public class ImportPySets extends SwingWorker<Integer, Void> {
 	
 	
 	@Override
-	protected Integer doInBackground() throws SQLException, IOException, XMLStreamException, BrickException {
+	protected Integer doInBackground() throws SQLException, IOException, XMLStreamException {
 		
 		int i = 0,qty,brickid;
 		XMLEvent e;
@@ -103,7 +103,7 @@ public class ImportPySets extends SwingWorker<Integer, Void> {
 					qty = Integer.parseInt(e.asStartElement().getAttributeByName(new QName("num")).getValue());
 					ArrayList<Brick> bl = Brick.getTmpById(brickid);
 					if (bl.size() != 1) 
-						throw new BrickException("Internal program error in ImportPySets: wrong brick id");
+						throw new IllegalArgumentException("Internal program error in ImportPySets: wrong brick id");
 					b = bl.get(0);
 					if (Brick.catalogById(brickid) == null) {
 						// insert empty brick ad a placeholder
@@ -112,7 +112,7 @@ public class ImportPySets extends SwingWorker<Integer, Void> {
 					}
 					Brick.tmpDelBricks(brickid, qty);
 					if (bs == null) 
-						throw new BrickException("Internal program error in ImportPySets: no set defined");
+						throw new IllegalStateException("Internal program error in ImportPySets: no set defined");
 					b.quantity = qty;
 					bs.addBrick(b);
 				}
