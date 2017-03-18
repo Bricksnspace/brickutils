@@ -86,20 +86,20 @@ public class BrickDB {
 				test.executeQuery("CALL FTL_DROP_ALL()");
 //				BricklinkPart.setDb(this);
 //				BricklinkPart.createFTS();
-				LDrawPart.setDb(this);
-				LDrawPart.createFTS();
+//				LDrawPart.setDb(this);
+//				LDrawPart.createFTS();
 				PartMapping.setDb(this);
 				PartMapping.createFTS();
 //				BricklinkSet.setDb(this);
 //				BricklinkSet.createFTS();
 			
 			}
-			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
-					"WHERE table='LDRPARTS' LIMIT 1");
-			if (!rs.next()) {
-				LDrawPart.setDb(this);
-				LDrawPart.createFTS();
-			}
+//			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
+//					"WHERE table='LDRPARTS' LIMIT 1");
+//			if (!rs.next()) {
+//				LDrawPart.setDb(this);
+//				LDrawPart.createFTS();
+//			}
 			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
 					"WHERE table='PARTMAPPING' LIMIT 1");
 			if (!rs.next()) { 
@@ -195,22 +195,22 @@ public class BrickDB {
 //			e.printStackTrace();
 //			return;
 //		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS ldrparts (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT, " +
-					"ldrid VARCHAR(64)," +
-					"name VARCHAR(255)," +
-					"category VARCHAR(255)," +
-					"keywords VARCHAR(255)," +
-					"deleted BOOL," +
-					"official BOOL," +
-					"lastmod TIMESTAMP" +
-					"); COMMIT ");
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-			return;
-		}
+//		try {
+//			st.execute("CREATE TABLE IF NOT EXISTS ldrparts (" +
+//					"id INT PRIMARY KEY AUTO_INCREMENT, " +
+//					"ldrid VARCHAR(64)," +
+//					"name VARCHAR(255)," +
+//					"category VARCHAR(255)," +
+//					"keywords VARCHAR(255)," +
+//					"deleted BOOL," +
+//					"official BOOL," +
+//					"lastmod TIMESTAMP" +
+//					"); COMMIT ");
+//		} catch (SQLException e) {
+//			//  Blocco catch generato automaticamente
+//			e.printStackTrace();
+//			return;
+//		}
 		try {
 			st.execute("CREATE TABLE IF NOT EXISTS colors (" +
 					"mapid INT PRIMARY KEY AUTO_INCREMENT," +
@@ -373,7 +373,7 @@ public class BrickDB {
 		Statement st = conn.createStatement();
 		// index for bricklink parts by blid
 //		st.executeUpdate("CREATE INDEX IF NOT EXISTS blp_blid ON "+BricklinkPart.table+"(blid)");
-		st.executeUpdate("CREATE INDEX IF NOT EXISTS ldr_ldid ON "+LDrawPart.table+"(ldrid)");
+//		st.executeUpdate("CREATE INDEX IF NOT EXISTS ldr_ldid ON "+LDrawPart.table+"(ldrid)");
 		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_mapid ON "+PartMapping.table+"(mapid)");
 		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_lddid ON "+PartMapping.table+"(designid)");
 		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_masterid ON "+PartMapping.table+"(masterid)");

@@ -36,4 +36,6 @@ public class MySettings {
 	public static final String CURRENT_SET = "currset";				// id for set in working list 
 	public static final String LDR_LIB_PATH = "ldrawlibpath";		// LDraw official lib path
 	public static final String LDR_UNOFF_LIB_PATH = "ldrawunofflibpath";	// unofficial lib path
+	public static final String LIBLIST = "ldliblist";				// other LDraw library list
+	public static final String LIBOFFICIAL = "libofficial";			// official LDraw library path
 }

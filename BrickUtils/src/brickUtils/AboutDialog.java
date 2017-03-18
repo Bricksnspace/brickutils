@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -21,17 +21,12 @@
 package brickUtils;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.Desktop;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -57,7 +52,7 @@ public class AboutDialog extends JDialog implements ActionListener {
 	private JButton okButton;
 	//private URI uri;
 	private JButton thanksButton;
-	private JButton otherSoftware;
+//	private JButton otherSoftware;
 	
 	
 	public AboutDialog(JFrame owner, String title, ImageIcon icn) {
@@ -97,7 +92,7 @@ public class AboutDialog extends JDialog implements ActionListener {
 //
 //		body.add(new JSeparator(SwingConstants.HORIZONTAL));
 
-		prog = new JLabel("© 2013-2016 Mario Pascucci <mpascucci@gmail.com>",SwingConstants.CENTER);
+		prog = new JLabel("© 2013-2017 Mario Pascucci <mpascucci@gmail.com>",SwingConstants.CENTER);
 		prog.setAlignmentX(Component.CENTER_ALIGNMENT);
 		body.add(prog);
 		
@@ -161,9 +156,9 @@ public class AboutDialog extends JDialog implements ActionListener {
 		buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
 		pane.add(buttonPane, BorderLayout.SOUTH);
 
-		otherSoftware = new JButton("More...");
-		buttonPane.add(otherSoftware);
-		otherSoftware.addActionListener(this);
+//		otherSoftware = new JButton("More...");
+//		buttonPane.add(otherSoftware);
+//		otherSoftware.addActionListener(this);
 		
 
 		thanksButton = new JButton("Thanks");
@@ -199,18 +194,18 @@ public class AboutDialog extends JDialog implements ActionListener {
 					JOptionPane.INFORMATION_MESSAGE, 
 					new ImageIcon(brickUtils.class.getResource("images/star.png")));
 		}
-		else if (ev.getSource() == otherSoftware) {
-			JOptionPane.showMessageDialog(this,
-					"Other brick-related software:\n"
-					+ "-JBrickBuilder (http://sourceforge.net/projects/jbrickbuilder)\n"
-					+ "  Easy LDraw 3D model editor in Java\n"
-					+ "-BrickMosaic (http://www.romabrick.it/brickmosaic)\n"
-					+ "  Transform your best photos to a mosaic of bricks",
-					"More brick software",
-					JOptionPane.INFORMATION_MESSAGE, 
-					new ImageIcon(brickUtils.class.getResource("images/checked.png"))
-					);
-		}
+//		else if (ev.getSource() == otherSoftware) {
+//			JOptionPane.showMessageDialog(this,
+//					"Other brick-related software:\n"
+//					+ "-JBrickBuilder (http://sourceforge.net/projects/jbrickbuilder)\n"
+//					+ "  Easy LDraw 3D model editor in Java\n"
+//					+ "-BrickMosaic (http://www.romabrick.it/brickmosaic)\n"
+//					+ "  Transform your best photos to a mosaic of bricks",
+//					"More brick software",
+//					JOptionPane.INFORMATION_MESSAGE, 
+//					new ImageIcon(brickUtils.class.getResource("images/checked.png"))
+//					);
+//		}
 	}
 
 

@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -42,6 +42,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import bricksnspace.ldrawlib.LDrawLib;
+import bricksnspace.ldrawlib.LDrawPart;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;
@@ -51,6 +52,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LdrSearch extends JDialog implements ActionListener, ListSelectionListener {
 
@@ -109,11 +112,12 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 		table.setAutoCreateRowSorter(true);
 		table.getSelectionModel().addListSelectionListener(this);
 		TableColumnModel tcm = table.getColumnModel();
-		tcm.getColumn(0).setPreferredWidth(40);
-		tcm.getColumn(1).setPreferredWidth(90);
-		tcm.getColumn(2).setPreferredWidth(350);
-		tcm.getColumn(5).setPreferredWidth(50);
-		tcm.getColumn(6).setPreferredWidth(50);
+		tcm.getColumn(0).setPreferredWidth(60);
+		tcm.getColumn(1).setPreferredWidth(200);
+		tcm.getColumn(2).setPreferredWidth(100);
+		tcm.getColumn(3).setPreferredWidth(100);
+		tcm.getColumn(4).setPreferredWidth(40);
+		//tcm.getColumn(6).setPreferredWidth(50);
 		
 		userPane = new JPanel();
 		contentPanel.add(userPane, BorderLayout.SOUTH);
@@ -348,51 +352,54 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 			// search by id with "like"
 			try {
 				query = "ldrid like '%"+searchText.getText()+"%'";
-				ArrayList<LDrawPart> pl = LDrawPart.get(query);
+				ArrayList<LDrawPart> pl = ldrawlib.getLdrDB().get(query,1000);
 				tableModel.setParts(pl);
 				scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(this, 
 						"Error retrieving LDraw parts from database.\n"+e.getLocalizedMessage(), 
 						"Database error", JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"LDraw search error",e);
 				return;
 			}
 		}
 		else if (byText.isSelected() && searchText.getText().length() > 0) {
 			ArrayList<LDrawPart> pl;
 			try {
-				pl = LDrawPart.getFTS(searchText.getText());
+				pl = ldrawlib.getLdrDB().getFTS(searchText.getText(),1000);
 				tableModel.setParts(pl);
 				scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
-			} catch (Exception e) {
+			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(this, 
 						"Error retrieving LDraw parts from database.\n"+e.getLocalizedMessage(), 
 						"Database error", JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"LDraw search error",e);
 			}
 		}
-		else if (onlyDeleted.isSelected()) {
-			ArrayList<LDrawPart> pl;
-			try {
-				pl = LDrawPart.get("deleted");
-				tableModel.setParts(pl);
-				scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
-			} catch (Exception e) {
-				JOptionPane.showMessageDialog(this, 
-						"Error retrieving LDraw parts from database.\n"+e.getLocalizedMessage(), 
-						"Database error", JOptionPane.ERROR_MESSAGE);
-			}
-
-		}
+//		else if (onlyDeleted.isSelected()) {
+//			ArrayList<LDrawPart> pl;
+//			try {
+//				pl = LDrawPart.get("deleted");
+//				tableModel.setParts(pl);
+//				scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
+//			} catch (Exception e) {
+//				JOptionPane.showMessageDialog(this, 
+//						"Error retrieving LDraw parts from database.\n"+e.getLocalizedMessage(), 
+//						"Database error", JOptionPane.ERROR_MESSAGE);
+//			}
+//
+//		}
 		else if (onlyNew.isSelected()) {
 			ArrayList<LDrawPart> pl;
 			try {
-				pl = LDrawPart.getNew();
+				pl = ldrawlib.getLdrDB().getNew();
 				tableModel.setParts(pl);
 				scrollPane.getVerticalScrollBar().setValue(scrollPane.getVerticalScrollBar().getMinimum());
 			} catch (Exception e) {
 				JOptionPane.showMessageDialog(this, 
 						"Error retrieving LDraw parts from database.\n"+e.getLocalizedMessage(), 
 						"Database error", JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"LDraw search error",e);
 			}
 			
 		}
@@ -409,7 +416,7 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 			brickShape.setLdrawid("");
 			return;
 		}
-		String ldrid = (String) tableModel.getValueAt(table.convertRowIndexToModel(table.getSelectedRow()),1);
+		String ldrid = (String) tableModel.getValueAt(table.convertRowIndexToModel(table.getSelectedRow()),0);
 		brickShape.setLdrawid(ldrid);
 		if (autoConvert.isSelected()) {
 			try {
@@ -417,7 +424,7 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(this, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);
-				e.printStackTrace();
+				Logger.getGlobal().log(Level.SEVERE,"LDraw search error",e);
 			}
 			if (convertedBrick.blID != "") {
 				isBlOk.setIcon(shapeOk);

@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -27,6 +27,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.media.opengl.GLException;
 import javax.swing.ImageIcon;
@@ -42,6 +44,13 @@ import bricksnspace.ldrawlib.LDrawColor;
 import bricksnspace.ldrawlib.LDrawLib;
 import bricksnspace.ldrawlib.LDrawPartType;
 
+
+/**
+ * A panel shows LDraw part shape and color
+ * 
+ * @author Mario Pascucci
+ *
+ */
 public class BrickShapePanel extends JPanel implements ActionListener {
 
 	private static final long serialVersionUID = 3165286567872362085L;
@@ -101,7 +110,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 			brickShape.update();
 		} catch (GLException e) {
 			brickShape = null;
-			e.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE, "[initialize] Unable to use OpenGL.", e);
 		}
 		gbcs.fill = GridBagConstraints.NONE;
 		gbcs.gridx = 0;
@@ -109,38 +118,12 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 		gbcs.gridheight = 3;
 		gbcs.gridwidth = 3;
 		add(brickShape.getCanvas(),gbcs);
-//		animUp = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-up.png")));
-//		animDown = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-down.png")));
-//		animLeft = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-previous.png")));
-//		animRight = new JButton(new ImageIcon(brickUtils.class.getResource("images/go-next.png")));
-//		animFlipX = new JButton(new ImageIcon(brickUtils.class.getResource("images/object-flip-vertical.png")));
-//		animFlipY = new JButton(new ImageIcon(brickUtils.class.getResource("images/object-flip-horizontal.png")));
 		animReset = new JButton(new ImageIcon(brickUtils.class.getResource("images/view-refresh.png")));
 		shapeOk = new ImageIcon(brickUtils.class.getResource("images/ok.png"));
 		shapeLike = new ImageIcon(brickUtils.class.getResource("images/no.png"));
 		shapeUnkn = new ImageIcon(brickUtils.class.getResource("images/off.png"));
 		
 		gbcs.fill = GridBagConstraints.HORIZONTAL;
-//		gbcs.gridx = 3;
-//		gbcs.gridy = 0;
-//		gbcs.gridheight = 1;
-//		gbcs.gridwidth = 1;
-//		add(animUp,gbcs);
-//		gbcs.gridy = 1;
-//		gbcs.weighty = 1.0;
-//		add(animFlipX,gbcs);
-//		gbcs.gridy = 2;
-//		gbcs.weighty = 0.0;
-//		add(animDown,gbcs);
-//		gbcs.gridx = 0;
-//		gbcs.gridy = 3;
-//		add(animLeft,gbcs);
-//		gbcs.gridx = 1;
-//		gbcs.weightx = 1.0;
-//		add(animFlipY,gbcs);
-//		gbcs.gridx = 2;
-//		gbcs.weightx = 0.0;
-//		add(animRight,gbcs);
 		gbcs.gridy = 3;
 		gbcs.gridwidth = 2;
 		gbcs.gridx = 0;
@@ -154,12 +137,6 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 		gbcs.gridy = 3;
 		gbcs.weightx = 0.1;
 		add(shapeRightness,gbcs);
-//		animUp.addActionListener(this);
-//		animDown.addActionListener(this);
-//		animLeft.addActionListener(this);
-//		animRight.addActionListener(this);
-//		animFlipX.addActionListener(this);
-//		animFlipY.addActionListener(this);
 		animReset.addActionListener(this);
 
 	}
@@ -180,6 +157,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 	
 	public void setLdrawid(String ldrid) {
 		
+		//System.out.println(ldrid);
 		if (brickShape == null)
 			return;
 		currentPart = ldrid;

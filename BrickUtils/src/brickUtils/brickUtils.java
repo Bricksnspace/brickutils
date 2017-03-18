@@ -19,6 +19,9 @@
 
 package brickUtils;
 
+
+
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Container;
@@ -52,6 +55,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.prefs.BackingStoreException;
+import java.util.zip.ZipException;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -96,10 +100,13 @@ import bricksnspace.bricklinklib.BLSetImporter;
 import bricksnspace.bricklinklib.BricklinkColor;
 import bricksnspace.bricklinklib.BricklinkLib;
 import bricksnspace.bricklinklib.BricklinkPart;
+import bricksnspace.busydialog.BusyDialog;
 import bricksnspace.dbconnector.DBConnector;
-import bricksnspace.ldrawlib.LDrawColor;
+import bricksnspace.ldrawlib.LDLibManageDlg;
 import bricksnspace.ldrawlib.LDrawDBImportTask;
 import bricksnspace.ldrawlib.LDrawLib;
+import bricksnspace.ldrawlib.LDrawPart;
+
 
 
 /*
@@ -147,6 +154,8 @@ import bricksnspace.ldrawlib.LDrawLib;
 public class brickUtils implements ActionListener, ListSelectionListener {
 
 
+	private static final String BRICKDBURL = "http://downloads.sourceforge.net/project/brickutils/brickutils/brickutils.h2.db";
+	private static final String BRICKUTILSDB = "brickutils.h2.db";
 	private static final String appName = "BrickUtils";
 	private static final String VERSIONURL = "http://brickutils.sourceforge.net/VERSION";
 	private static final String DEF_LDR_URL = "http://www.ldraw.org/library/updates/complete.zip";
@@ -244,6 +253,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	private JFileChooser fileVelocity;
 	private JFileChooser fileTemplateExport;
 	private FileHandler logFile;
+	private JMenuItem mntmLibs;
 	
 
 	
@@ -256,15 +266,19 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 
 			setProgress(0);
 			brickDB = new BrickDB("brickutils","brickutils","IFEXISTS=TRUE");
-			setProgress(60);
+			setProgress(30);
 			dbc = new DBConnector("brickutils","brickutils","IFEXISTS=TRUE");
 			BricklinkLib.Init(dbc);
+			setProgress(60);
+			// init LDraw part libraries
+			ldrlib = loadLDrawLibs(dbc);
 			setProgress(100);
 			return 100;
 		}
 		
 	}
 	
+	// FIXME: rivedere tutta la procedura di init.
 	
 	public brickUtils() {
 		
@@ -281,86 +295,65 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			e2.printStackTrace();
 		}
 
+		
+
+		
+		initPrefs();
+		
 		// images for busy animation
 		icnImg[0] = new ImageIcon(this.getClass().getResource("images/f0.png"));
 		icnImg[1] = new ImageIcon(this.getClass().getResource("images/f1.png"));
 		icnImg[2] = new ImageIcon(this.getClass().getResource("images/f2.png"));
 		icnImg[3] = new ImageIcon(this.getClass().getResource("images/f3.png"));
 
-		AppSettings.openPreferences(this);
-		
-		AppSettings.addPref(MySettings.APP_CHECK_UPDATE, "Checks for program updates at startup", AppSettings.BOOLEAN);
-		AppSettings.defBool(MySettings.APP_CHECK_UPDATE, true);
-		AppSettings.addPref(MySettings.APP_UPDATE_URL,"BrickUtils update URL: ",AppSettings.STRING);
-		AppSettings.defString(MySettings.APP_UPDATE_URL,VERSIONURL);
-		AppSettings.addPref(MySettings.IN_PRODUCTION, "Use only colors currently in production", AppSettings.BOOLEAN);
-		AppSettings.defBool(MySettings.IN_PRODUCTION, true);
-		AppSettings.addPref(MySettings.LDR_OFFICIAL_URL, "LDraw official library download URL", AppSettings.STRING);
-		AppSettings.defString(MySettings.LDR_OFFICIAL_URL,DEF_LDR_URL);
-		AppSettings.addPref(MySettings.LDR_UNOFFICIAL_URL,"LDraw unofficial library URL: ", AppSettings.STRING);
-		AppSettings.defString(MySettings.LDR_UNOFFICIAL_URL,DEF_UNOFF_LDR_URL);
-		AppSettings.addPref(MySettings.MAP_UPDATE, "Checks for mapping updates at startup", AppSettings.BOOLEAN);
-		AppSettings.defBool(MySettings.MAP_UPDATE, true);
-		AppSettings.addPref(MySettings.MAP_UPDATE_URL,"Mapping update URL: ",AppSettings.STRING);
-		AppSettings.defString(MySettings.MAP_UPDATE_URL,DEF_MAP_URL);
-//private properties
-		AppSettings.addPrivatePref(MySettings.CURRENT_SET, "Current set", AppSettings.INTEGER);
-		AppSettings.addPrivatePref(MySettings.UPDATE_SERIAL, "Mapping update serial", AppSettings.INTEGER);
-		AppSettings.defInt(MySettings.UPDATE_SERIAL, 1);
-		AppSettings.addPrivatePref(MySettings.LDR_LIB_PATH, "Official lib filename", AppSettings.STRING);
-		AppSettings.defString(MySettings.LDR_LIB_PATH, LDR_LIB_PATH);
-		AppSettings.addPrivatePref(MySettings.LDR_UNOFF_LIB_PATH, "Unofficial lib filename", AppSettings.STRING);
-		AppSettings.defString(MySettings.LDR_UNOFF_LIB_PATH, LDR_UNOFF_LIB_PATH);
-
 		// find if all files are "in"
-		// checks for db
-		File db = new File("brickutils.h2.db");
-		if (!db.exists()) {
-			int res = JOptionPane.showConfirmDialog(null, "You need some files to get program working:\n"+
-					"database and LDraw part libraries.\n"+
-					"Do you want to download from Internet?\n"+
-					"(Hit 'No' to exit program)", "First run", JOptionPane.YES_NO_OPTION);
-			if (res == JOptionPane.NO_OPTION) {
-				System.exit(0);
-			}
-			BusyDialog dlg = new BusyDialog(null,"Retrieve Database",true,true,icnImg);
-			GetFileFromURL task = null;
-			try {
-				task = new GetFileFromURL(new URL("http://downloads.sourceforge.net/project/brickutils/brickutils/brickutils.h2.db"),
-						db, dlg);
-			} catch (MalformedURLException e1) {
-				JOptionPane.showMessageDialog(null, "Problem with SF database URL","Internal error",JOptionPane.ERROR_MESSAGE);
-				Logger.getGlobal().log(Level.SEVERE,"Error reading database download URL",e1);
-				System.exit(1);
-			}
-			dlg.setTask(task);
-			Timer timer = new Timer(200, dlg);
-			task.execute();
-			timer.start();
-			dlg.setVisible(true);
-			// after completing task return here
-			timer.stop();
-			dlg.dispose();
-			try {
-				task.get(10, TimeUnit.MILLISECONDS);
-				//JOptionPane.showMessageDialog(null, "Downloaded "+r+" bytes.","Download Database",JOptionPane.INFORMATION_MESSAGE);
-			}
-			catch (ExecutionException e) {
-				JOptionPane.showMessageDialog(null, "Unable to download Database from Internet\nReason: "+e.getLocalizedMessage()+
-						"\nPlease retry later.", 
-						"Download error",JOptionPane.ERROR_MESSAGE);
-				Logger.getGlobal().log(Level.SEVERE,"Error downloading database",e);
-				System.exit(1);
-			} catch (InterruptedException e) {
-				JOptionPane.showMessageDialog(null, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-				Logger.getGlobal().log(Level.SEVERE,"Database download interrupted",e);
-				System.exit(1);
-			} catch (TimeoutException e) {
-				JOptionPane.showMessageDialog(null, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-				Logger.getGlobal().log(Level.SEVERE,"Unknown error in database downloading",e);
-				System.exit(1);
-			}
+		File db = new File(BRICKUTILSDB);
+		if (!db.exists() || AppSettings.get(MySettings.LIBOFFICIAL).equals("")) {
+			firstRun();
 		}
+		// checks for db
+//		File db = new File(BRICKUTILSDB);
+//		if (!db.exists()) {
+//			int res = JOptionPane.showConfirmDialog(null, "You need some files to get program working:\n"+
+//					"database and LDraw part libraries.\n"+
+//					"Do you want to download from Internet?\n"+
+//					"(Hit 'No' to exit program)", "First run", JOptionPane.YES_NO_OPTION);
+//			if (res == JOptionPane.NO_OPTION) {
+//				System.exit(0);
+//			}
+//			BusyDialog dlg = new BusyDialog(null,"Retrieve Database",true,icnImg);
+//			GetFileFromURL task = null;
+//			try {
+//				task = new GetFileFromURL(new URL(BRICKDBURL),
+//						db, dlg);
+//			} catch (MalformedURLException e1) {
+//				JOptionPane.showMessageDialog(null, "Problem with SF database URL","Internal error",JOptionPane.ERROR_MESSAGE);
+//				Logger.getGlobal().log(Level.SEVERE,"Error reading database download URL",e1);
+//				System.exit(1);
+//			}
+//			dlg.setTask(task);
+//			dlg.startTask();
+//			// after completing task return here
+//			try {
+//				task.get(10, TimeUnit.MILLISECONDS);
+//				//JOptionPane.showMessageDialog(null, "Downloaded "+r+" bytes.","Download Database",JOptionPane.INFORMATION_MESSAGE);
+//			}
+//			catch (ExecutionException e) {
+//				JOptionPane.showMessageDialog(null, "Unable to download Database from Internet\nReason: "+e.getLocalizedMessage()+
+//						"\nPlease retry later.", 
+//						"Download error",JOptionPane.ERROR_MESSAGE);
+//				Logger.getGlobal().log(Level.SEVERE,"Error downloading database",e);
+//				System.exit(1);
+//			} catch (InterruptedException e) {
+//				JOptionPane.showMessageDialog(null, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+//				Logger.getGlobal().log(Level.SEVERE,"Database download interrupted",e);
+//				System.exit(1);
+//			} catch (TimeoutException e) {
+//				JOptionPane.showMessageDialog(null, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+//				Logger.getGlobal().log(Level.SEVERE,"Unknown error in database downloading",e);
+//				System.exit(1);
+//			}
+//		}
 		dbInitTask = new InitDb();
 		splashTimer = new Timer(1000,this);
 		dbInitTask.execute();
@@ -384,14 +377,6 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 					+ "Please update",
 					"Program", JOptionPane.INFORMATION_MESSAGE);
 		}
-		// checks for LDraw part libraries
-		ldrlib = loadLDrawLibs();
-		try {
-			LDrawColor.readFromLibrary(ldrlib);
-		} catch (IOException e) {
-			Logger.getGlobal().log(Level.SEVERE,"Error reading color definitions from LDraw library",e);
-		}
-		bricksnspace.ldrawlib.LDrawPart.setLdrlib(ldrlib);
 		initialize();
 		
 	}
@@ -475,6 +460,11 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		mntmCheckUpdates = new JMenuItem("Check for DB updates...");
 		mntmCheckUpdates.addActionListener(this);
 		mnProgram.add(mntmCheckUpdates);
+
+		mntmLibs = new JMenuItem("LDraw libraries...");
+		mntmLibs.addActionListener(this);
+		mnProgram.add(mntmLibs);
+
 
 		Container masterPane = frame.getContentPane();
 		tabPane = new JTabbedPane();
@@ -954,7 +944,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			try {
 						//"https://sourceforge.net/projects/brickutils/files/brickutils/updates/"));
 				PartMapping.setDb(brickDB);
-				LDrawPart.setDb(brickDB);
+				// LDrawPart.setDb(brickDB);
 				BrickColor.setDb(brickDB);
 				Brick.setDb(brickDB);
 				BrickSet.setDb(brickDB);
@@ -1022,7 +1012,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 					"Confirm update", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE);
 			if (response != JOptionPane.YES_OPTION) 
 				return;
-			ldrlib = doImportLdrParts();
+			if (doDownloadLdrParts()) {
+				doReadLdrParts(ldrlib);
+			}
 		}
 		else if (e.getSource() == btnWhichSet) {
 			doSelectWhichSet();
@@ -1099,6 +1091,11 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		else if (e.getSource() == mntmCheckUpdates) {
 			checkUpdate(false);
 		}
+		else if (e.getSource() == mntmLibs) {
+			LDLibManageDlg dlg = new LDLibManageDlg(frame, "Manage LDraw libraries", true, ldrlib);
+			dlg.setVisible(true);
+			saveLibs(ldrlib);
+		}
 		else if (e.getSource() == mntmAbout) {
 			AboutDialog dlg = new AboutDialog(frame, "About", 
 					new ImageIcon(this.getClass().getResource("images/BrickUtils.png")));
@@ -1113,7 +1110,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	}
 
 	
-	
+
 	private void closeApp() {
 		try {
 			brickDB.conn.close();
@@ -1130,36 +1127,256 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		System.exit(0);
 	}
 	
+
+/*	
+ * App init functions
+ */	
+
 	
-	private LDrawLib loadLDrawLibs() {
+	
+	private void initPrefs() {
+		AppSettings.openPreferences(this);
 		
-		// checks for LDraw part libraries 
-		// first run?
-		File f = new File(AppSettings.get(MySettings.LDR_LIB_PATH));
+		AppSettings.addPref(MySettings.APP_CHECK_UPDATE, "Checks for program updates at startup", AppSettings.BOOLEAN);
+		AppSettings.defBool(MySettings.APP_CHECK_UPDATE, true);
+		AppSettings.addPref(MySettings.APP_UPDATE_URL,"BrickUtils update URL: ",AppSettings.STRING);
+		AppSettings.defString(MySettings.APP_UPDATE_URL,VERSIONURL);
+		AppSettings.addPref(MySettings.IN_PRODUCTION, "Use only colors currently in production", AppSettings.BOOLEAN);
+		AppSettings.defBool(MySettings.IN_PRODUCTION, true);
+		AppSettings.addPref(MySettings.LDR_OFFICIAL_URL, "LDraw official library download URL", AppSettings.STRING);
+		AppSettings.defString(MySettings.LDR_OFFICIAL_URL,DEF_LDR_URL);
+		AppSettings.addPref(MySettings.LDR_UNOFFICIAL_URL,"LDraw unofficial library URL: ", AppSettings.STRING);
+		AppSettings.defString(MySettings.LDR_UNOFFICIAL_URL,DEF_UNOFF_LDR_URL);
+		AppSettings.addPref(MySettings.MAP_UPDATE, "Checks for mapping updates at startup", AppSettings.BOOLEAN);
+		AppSettings.defBool(MySettings.MAP_UPDATE, true);
+		AppSettings.addPref(MySettings.MAP_UPDATE_URL,"Mapping update URL: ",AppSettings.STRING);
+		AppSettings.defString(MySettings.MAP_UPDATE_URL,DEF_MAP_URL);
+//private properties
+		AppSettings.addPrivatePref(MySettings.CURRENT_SET, "Current set", AppSettings.INTEGER);
+		AppSettings.addPrivatePref(MySettings.UPDATE_SERIAL, "Mapping update serial", AppSettings.INTEGER);
+		AppSettings.defInt(MySettings.UPDATE_SERIAL, 1);
+		AppSettings.addPrivatePref(MySettings.LDR_LIB_PATH, "Official lib filename", AppSettings.STRING);
+		AppSettings.defString(MySettings.LDR_LIB_PATH, LDR_LIB_PATH);
+		AppSettings.addPrivatePref(MySettings.LDR_UNOFF_LIB_PATH, "Unofficial lib filename", AppSettings.STRING);
+		AppSettings.defString(MySettings.LDR_UNOFF_LIB_PATH, LDR_UNOFF_LIB_PATH);
+		AppSettings.addPrivatePref(MySettings.LIBLIST, "Unofficial lib filename", AppSettings.STRING);
+		AppSettings.addPrivatePref(MySettings.LIBOFFICIAL, "Default official LDraw lib path", AppSettings.STRING);
+	}
+	
+	
+	
+	private void firstRun() {
+		
 		LDrawLib ldl = null;
-		if (!f.exists()) {
-			int res = JOptionPane.showConfirmDialog(frame, 
-					"No LDraw libs found, download defaults?\n(reply 'No' to exit program)", 
-					"No library found", JOptionPane.YES_NO_OPTION);
-			if (res != JOptionPane.YES_OPTION) {
+		
+		File db = new File(BRICKUTILSDB);
+		if (!db.exists()) {
+			int res = JOptionPane.showConfirmDialog(null, "You need database file to get program working:\n"+
+					"do you want to download from Internet?\n"+
+					"(Hit 'No' to exit program)", "First run", JOptionPane.YES_NO_OPTION);
+			if (res == JOptionPane.NO_OPTION) {
 				System.exit(0);
 			}
-			ldl = doImportLdrParts();
-		}
-		else {
+			BusyDialog dlg = new BusyDialog(null,"Retrieve Database",true,icnImg);
+			GetFileFromURL task = null;
 			try {
-				ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH),dbc);
-				ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
+				task = new GetFileFromURL(new URL(BRICKDBURL), db, dlg);
+			} catch (MalformedURLException e1) {
+				JOptionPane.showMessageDialog(null, "Problem with SF database URL","Internal error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Error reading database download URL",e1);
+				System.exit(1);
 			}
-			catch (IOException | SQLException e) {
-				JOptionPane.showMessageDialog(frame, "Unable to load LDraw libraries\nReason: "+e.getLocalizedMessage()+"\nExiting now...", 
-						"Library error",JOptionPane.ERROR_MESSAGE);
-				Logger.getGlobal().log(Level.SEVERE,"LDraw Library error", e);
+			dlg.setTask(task);
+			dlg.startTask();
+			// after completing task return here
+			try {
+				task.get(10, TimeUnit.MILLISECONDS);
+				//JOptionPane.showMessageDialog(null, "Downloaded "+r+" bytes.","Download Database",JOptionPane.INFORMATION_MESSAGE);
+			}
+			catch (ExecutionException e) {
+				JOptionPane.showMessageDialog(null, "Unable to download Database from Internet\nReason: "+e.getLocalizedMessage()+
+						"\nPlease retry later.", 
+						"Download error",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Error downloading database",e);
+				System.exit(1);
+			} catch (InterruptedException e) {
+				JOptionPane.showMessageDialog(null, "Task interrupted!\n Reason: "+e.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Database download interrupted",e);
+				System.exit(1);
+			} catch (TimeoutException e) {
+				JOptionPane.showMessageDialog(null, "Timeout retrieving task output\nReason: "+e.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+				Logger.getGlobal().log(Level.SEVERE,"Unknown error in database downloading",e);
 				System.exit(1);
 			}
 		}
-		return ldl;
+		try {
+			dbc = new DBConnector("brickutils","brickutils","IFEXISTS=TRUE");
+		} catch (ClassNotFoundException | SQLException e1) {
+			JOptionPane.showMessageDialog(null, 
+					"Unable to establish a connection with database.\n"
+					+"You can't use program without it.\n"
+					+ "Program now exits.",
+					"Database error", JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[MAIN] Unable to establish a connection with database.",e1);
+			System.exit(1);
+		}
+		if (AppSettings.get(MySettings.LIBOFFICIAL).equals("")) {
+			// there is a standard LDraw library installed?
+			if (LDrawLib.isAlreadyInstalled()) {
+				int res = JOptionPane.showConfirmDialog(frame, 
+						"There is a standard LDraw library installed.\nDo you want to use it?", 
+						"Standard library found", JOptionPane.YES_NO_OPTION);
+				if (res == JOptionPane.YES_OPTION) {
+					try {
+						ldl = new LDrawLib(LDrawLib.getInstalled(),dbc);
+						if (!ldl.isLDrawStd(LDrawLib.OFFICIALINDEX)) 
+							throw new IOException("Installed LDraw library isn't an official lib");
+//						BusyDialog busyDialog = new BusyDialog(frame,"Import LDraw library",true,icnImg);
+//						LDrawDBImportTask task = new LDrawDBImportTask(ldl, LDrawLib.OFFICIALINDEX);
+//						busyDialog.setTask(task);
+//						busyDialog.setMsg("Reading LDraw library...");
+//						busyDialog.startTask();
+//						// after completing task return here
+//						busyDialog.dispose();
+//						int r = task.get(10, TimeUnit.MILLISECONDS);
+//						JOptionPane.showMessageDialog(frame, "Imported "+r+" parts from library.","LDraw Library",JOptionPane.INFORMATION_MESSAGE);
+					}
+					catch (IOException | SQLException ex) {
+						JOptionPane.showMessageDialog(frame, "Unable to use LDraw library\nReason: "+ex.getLocalizedMessage(), 
+								"Library error",JOptionPane.ERROR_MESSAGE);
+						Logger.getGlobal().log(Level.SEVERE,"Unable to use LDraw installed library", ex);
+					}
+				}
+			}
+			// no standard library
+			if (ldl == null) {
+				File f = new File(AppSettings.get(MySettings.LDR_LIB_PATH));
+				if (f.exists()) {
+					try {
+						ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH), dbc);
+						if (!ldl.isLDrawStd(LDrawLib.OFFICIALINDEX))
+							throw new IOException("LDraw Library in default path isn't a standard library");
+						File fu = new File(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
+						if (fu.exists())
+							ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH), true);
+					} catch (SQLException | IOException ex) {
+						Logger.getGlobal().log(Level.WARNING, "LDraw library files in default path can't be used", ex);
+						f.delete();
+					}
+				}
+				if (!f.exists()) {
+					int res = JOptionPane.showConfirmDialog(frame, 
+							"No LDraw libs found, download defaults?\n(reply 'No' to manually select library)", 
+							"No library found", JOptionPane.YES_NO_OPTION);
+					if (res == JOptionPane.YES_OPTION) {
+						if (!doDownloadLdrParts()) {
+							JOptionPane.showMessageDialog(frame, "Unable to download LDraw libraries\nExiting now...", 
+									"Library error",JOptionPane.ERROR_MESSAGE);
+							Logger.getGlobal().log(Level.SEVERE,"LDraw Library error, unable to download files");
+							System.exit(1);
+						}
+					}
+					else {
+						// manually select a library
+						JFileChooser jfc = new JFileChooser(".");
+						FileFilter ff = new FileNameExtensionFilter("LDraw Library ZIP", "zip");
+						jfc.setFileFilter(ff);
+						jfc.setDialogTitle("Select Official LDraw library (ZIP or folder)");
+						jfc.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+						while (true) {
+							res = jfc.showOpenDialog(null);
+							if (res == JFileChooser.APPROVE_OPTION) {
+								try {							
+									ldl = new LDrawLib(jfc.getSelectedFile().getPath(),dbc);
+									if (!ldl.isLDrawStd(LDrawLib.OFFICIALINDEX)) {
+										JOptionPane.showMessageDialog(null,
+												"File/folder "+jfc.getSelectedFile().getName()+"\n" +
+												"isn't an official LDraw library.\n"+
+												"Try again.",
+												"Unknown folder/file", JOptionPane.ERROR_MESSAGE);
+										continue;
+									}
+									break;
+								} catch (IOException | SQLException e) {
+									JOptionPane.showMessageDialog(null,
+											"Unable to use library "+jfc.getSelectedFile().getName()+"\n" +
+											"Cause: "+e.getLocalizedMessage()+"\n"+
+											"Try again.",
+											"Library error", JOptionPane.ERROR_MESSAGE);
+									Logger.getGlobal().log(Level.WARNING,"[firstRun] Error selecting library: "+jfc.getSelectedFile(),e);
+								}
+							}
+							else {
+								res = JOptionPane.showConfirmDialog(null, 
+										"Do you want to exit program?\n",
+										"Confirm", JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+								if (res == JOptionPane.YES_OPTION) {
+									System.exit(0);
+								}
+							}
+						}
+					}
+				}
+				
+			}
+			doReadLdrParts(ldl);
+			LDLibManageDlg dlg = new LDLibManageDlg(frame, "Edit/add other libraries to use", true, ldl);
+			dlg.setVisible(true);
+			saveLibs(ldl);
+		}
+
 	}
+	
+	
+	
+	private LDrawLib loadLDrawLibs(DBConnector dbconn) throws ZipException, IOException, SQLException {
+		
+		LDrawLib l = new LDrawLib(AppSettings.get(MySettings.LIBOFFICIAL),dbc);
+		String preflib = AppSettings.get(MySettings.LIBLIST);
+		String[] libs = preflib.split("\\|");
+		int n = 0;
+		while (n < libs.length) {
+			// add library and set if enabled (string == "t" is for "true")
+			l.addLDLib(libs[n],libs[n+1].equals("t"));
+			n += 2;
+		}
+		return l;
+	}
+	
+	
+	
+	
+	public void saveLibs(LDrawLib l) {
+		
+		String preflib = "";
+		
+		AppSettings.put(MySettings.LIBOFFICIAL, l.getPath(LDrawLib.OFFICIALINDEX));
+		for (int i=1;i<l.count();i++) {
+			if (i > 1) 
+				preflib += "|";	// adds a separator
+			preflib += l.getPath(i)+"|"+(l.isEnabled(i)?"t":"f"); 
+		}
+		AppSettings.put(MySettings.LIBLIST, preflib);
+	}
+
+
+	
+	
+//	public LDrawLib loadLibs() throws IOException, SQLException {
+//		
+//		LDrawLib l = new LDrawLib(dbc);
+//		String preflib = AppSettings.get(MySettings.LIBLIST);
+//		String[] libs = preflib.split("\\|");
+//		int n = 0;
+//		while (n < libs.length) {
+//			// add library and set if official and enabled (string == "t" is for "true")
+//			l.addLDLib(libs[n],libs[n+1].equals("t"),libs[n+2].equals("t"));
+//			n += 3;
+//		}
+//		return l;
+//	}
+//	
+
 	
 	
 	
@@ -1274,20 +1491,16 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		if (retval != JFileChooser.APPROVE_OPTION) 
 			return;
 		File fname = fileLdraw.getSelectedFile();
-		BusyDialog busyDialog = new BusyDialog(frame,"Import LDraw project file",true,true,icnImg);
+		BusyDialog busyDialog = new BusyDialog(frame,"Import LDraw project file",true,icnImg);
 		busyDialog.setLocationRelativeTo(frame);
 		ImportLDrawProjectTask task = new ImportLDrawProjectTask(fname,ldrlib);
 		busyDialog.setTask(task);
 		busyDialog.setMsg("Reading LDraw project file...");
-		Timer timer = new Timer(200, busyDialog);
-		task.execute();
-		timer.start();
-		busyDialog.setVisible(true);
+		busyDialog.startTask();
 		// after completing task return here
-		timer.stop();
 		busyDialog.dispose();
 		try {
-			Integer r = task.get(10, TimeUnit.MILLISECONDS);
+			int r = task.get(10, TimeUnit.MILLISECONDS);
 			if (task.isWarnings()) {
 				JOptionPane.showMessageDialog(frame, "Imported "+r+" bricks, but\nthere are some errors. See logs for details.", 
 						"LDraw import warnings",JOptionPane.WARNING_MESSAGE);
@@ -1333,20 +1546,16 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		if (retval != JFileChooser.APPROVE_OPTION) 
 			return;
 		File fname = fileLdd.getSelectedFile();
-		BusyDialog busyDialog = new BusyDialog(frame,"Import LDD project file",true,true,icnImg);
+		BusyDialog busyDialog = new BusyDialog(frame,"Import LDD project file",true,icnImg);
 		busyDialog.setLocationRelativeTo(frame);
 		ImportLddProjectTask task = new ImportLddProjectTask(fname);
 		busyDialog.setTask(task);
 		busyDialog.setMsg("Reading LDD project file...");
-		Timer timer = new Timer(200, busyDialog);
-		task.execute();
-		timer.start();
-		busyDialog.setVisible(true);
+		busyDialog.startTask();
 		// after completing task return here
-		timer.stop();
 		busyDialog.dispose();
 		try {
-			Integer r = task.get(10, TimeUnit.MILLISECONDS);
+			int r = task.get(10, TimeUnit.MILLISECONDS);
 			JOptionPane.showMessageDialog(frame, "Imported "+r+" bricks.","LDD Import",JOptionPane.INFORMATION_MESSAGE);
 			Brick.saveTmpToWork();
 		}
@@ -1379,17 +1588,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		if (retval != JFileChooser.APPROVE_OPTION) 
 			return;
 		File fname = fileExport.getSelectedFile();
-		BusyDialog busyDialog = new BusyDialog(frame,"Import BrickUtils export/backup file",true,true,icnImg);
+		BusyDialog busyDialog = new BusyDialog(frame,"Import BrickUtils export/backup file",true,icnImg);
 		busyDialog.setLocationRelativeTo(frame);
 		ImportBUtilsFile task = new ImportBUtilsFile(fname);
 		busyDialog.setTask(task);
 		busyDialog.setMsg("Reading BrickUtils brick catalog XML file...");
-		Timer timer = new Timer(200, busyDialog);
-		task.execute();
-		timer.start();
-		busyDialog.setVisible(true);
+		busyDialog.startTask();
 		// after completing task return here
-		timer.stop();
 		busyDialog.dispose();
 		try {
 			Integer[] r = task.get(10, TimeUnit.MILLISECONDS);
@@ -1511,17 +1716,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		int retVal = fileBl.showOpenDialog(frame);
 		if (retVal == JFileChooser.APPROVE_OPTION) {
 			File fname = fileBl.getSelectedFile();
-			BusyDialog busyDialog = new BusyDialog(frame,"Import pyBrickUtils bricks",true,true,icnImg);
+			BusyDialog busyDialog = new BusyDialog(frame,"Import pyBrickUtils bricks",true,icnImg);
 			busyDialog.setLocationRelativeTo(frame);
 			ImportPyBricks pybtask = new ImportPyBricks(fname);
 			busyDialog.setTask(pybtask);
 			busyDialog.setMsg("Reading pyBrickUtils brick catalog XML file...");
-			Timer timer = new Timer(200, busyDialog);
-			pybtask.execute();
-			timer.start();
-			busyDialog.setVisible(true);
+			busyDialog.startTask();
 			// after completing task return here
-			timer.stop();
 			busyDialog.dispose();
 			try {
 				bricks = pybtask.get(10, TimeUnit.MILLISECONDS);
@@ -1544,17 +1745,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			retVal = fileBl.showOpenDialog(frame);
 			if (retVal == JFileChooser.APPROVE_OPTION) {
 				File fsname = fileBl.getSelectedFile();
-				busyDialog = new BusyDialog(frame,"Import pyBrickUtils sets",true,true,icnImg);
+				busyDialog = new BusyDialog(frame,"Import pyBrickUtils sets",true,icnImg);
 				busyDialog.setLocationRelativeTo(frame);
 				ImportPySets pysettask = new ImportPySets(fsname);
 				busyDialog.setTask(pysettask);
 				busyDialog.setMsg("Reading pyBrickUtils sets catalog XML file...");
-				timer = new Timer(200, busyDialog);
-				pysettask.execute();
-				timer.start();
-				busyDialog.setVisible(true);
+				busyDialog.startTask();
 				// after completing task return here
-				timer.stop();
 				busyDialog.dispose();
 				try {
 					sets = pysettask.get(10, TimeUnit.MILLISECONDS);
@@ -1745,74 +1942,81 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 
 	
 
-	private LDrawLib doImportLdrParts() {
+	private boolean doDownloadLdrParts() {
 
-		LDrawLib ldl = null;
-		BusyDialog dlg = new BusyDialog(frame,"Update LDraw libs",true,true,icnImg);
+		BusyDialog dlg = new BusyDialog(frame,"Update LDraw libs",true,icnImg);
 		LDrawLibUpdate chk = new LDrawLibUpdate(dlg);
 		dlg.setTask(chk);
-		Timer timer = new Timer(300, dlg);
-		chk.execute();
-		timer.start();
-		dlg.setVisible(true);
+		dlg.startTask();
 		// after completing task return here
-		timer.stop();
 		try {
-			// official parts
-			Integer[] i = chk.get(10, TimeUnit.MILLISECONDS);
-			ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH),dbc);
-			LDrawDBImportTask ldrTask = new LDrawDBImportTask(ldl,ldl.getLdrDB(),LDrawLib.OFFICIALINDEX);
-			dlg.setMsg("Updates official parts DB");
-			dlg.setProgress(0);
-			timer = new Timer(300,dlg);
-			ldrTask.execute();
-			dlg.setModal(true);
-			dlg.setTask(ldrTask);
-			timer.start();
-			dlg.setVisible(true);
-			Integer numOff = ldrTask.get(100, TimeUnit.MILLISECONDS);
-			// unofficial parts
-			int index = ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
-			ldrTask = new LDrawDBImportTask(ldl,ldl.getLdrDB(),index);
-			dlg.setMsg("Updates unofficial parts DB");
-			dlg.setProgress(0);
-			dlg.setTask(ldrTask);
-			timer = new Timer(300,dlg);
-			ldrTask.execute();
-			timer.start();
-			dlg.setVisible(true);
-			Integer numUnoff = ldrTask.get(100, TimeUnit.MILLISECONDS);
-			if (i[0] == 0 && i[1] == 0) {
-				JOptionPane.showMessageDialog(frame, "No new updates to LDraw part Libraries.", 
-						"Check OK",JOptionPane.INFORMATION_MESSAGE);
-			}
-			else {
-				JOptionPane.showMessageDialog(frame, "LDraw libraries updated.\n"+
-						numOff+" official part\n"+numUnoff+" unofficial parts.", 
-					"Update Ok",JOptionPane.INFORMATION_MESSAGE);
-			}
+			// gets LDraw parts from Internet
+			chk.get(10, TimeUnit.MILLISECONDS);
+			return true;
 		}
 		catch (ExecutionException ex) {
 			JOptionPane.showMessageDialog(frame, "Unable to get updates\nReason: "+ex.getLocalizedMessage(), 
 					"Update error",JOptionPane.ERROR_MESSAGE);
-			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Update error, library file:"+MySettings.LDR_LIB_PATH+
+			Logger.getGlobal().log(Level.SEVERE,"[doDownloadLdrParts] Update error, library file:"+MySettings.LDR_LIB_PATH+
 					" - "+MySettings.LDR_UNOFF_LIB_PATH,ex);
 		} catch (InterruptedException e1) {
 			JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
-			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Task interrupted",e1);
+			Logger.getGlobal().log(Level.SEVERE,"[doDownloadLdrParts] Task interrupted",e1);
 		} catch (CancellationException ex) {
-			JOptionPane.showMessageDialog(frame,"Cancelled by user\nReason: "+ex.getLocalizedMessage(), "Task cancelled",JOptionPane.ERROR_MESSAGE);
-			Logger.getGlobal().log(Level.WARNING,"[doImportLdrParts] User cancel task",ex);
+			JOptionPane.showMessageDialog(frame,"Cancelled by user\nReason: "+ex.getLocalizedMessage(), "Task cancel",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.WARNING,"[doDownloadLdrParts] User cancel task",ex);
 		} catch (TimeoutException e1) {
 			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
-			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Task timeout",e1);
-		} catch (IOException | SQLException e) {
-			JOptionPane.showMessageDialog(frame, "Update failed\n"+e.toString()+"\nYou may need to retry.", 
-					"File error",JOptionPane.ERROR_MESSAGE);
-			Logger.getGlobal().log(Level.SEVERE,"[doImportLdrParts] Update error, library file:"+MySettings.LDR_LIB_PATH+
-					" - "+MySettings.LDR_UNOFF_LIB_PATH,e);
+			Logger.getGlobal().log(Level.SEVERE,"[doDownloadLdrParts] Task timeout",e1);
 		}
-		return ldl;
+		return false;
+	}
+
+
+	
+	
+	private boolean doReadLdrParts(LDrawLib ldl) {
+
+		try {
+			BusyDialog dlg = new BusyDialog(frame, "Update parts database", true, icnImg);
+			// update parts
+			int total = 0;
+			int official = 0;
+			for (int i=0;i<ldl.count();i++) {
+				LDrawDBImportTask ldrTask = new LDrawDBImportTask(ldl,i);
+				if (i == LDrawLib.OFFICIALINDEX) 
+					dlg.setMsg("Updates official parts DB");
+				else
+					dlg.setMsg("Updates unofficial parts #"+i);
+				dlg.setProgress(0);
+				dlg.setTask(ldrTask);
+				dlg.startTask();
+				int num = ldrTask.get(100, TimeUnit.MILLISECONDS);
+				if (LDrawLib.OFFICIALINDEX == i)
+					official = num;
+				total += num;
+			}
+			JOptionPane.showMessageDialog(frame, "LDraw libraries updated.\n"+
+					official+" official part\n"+total+" total parts.", 
+				"Update Ok",JOptionPane.INFORMATION_MESSAGE);
+			return true;
+		}
+		catch (ExecutionException ex) {
+			JOptionPane.showMessageDialog(frame, "Unable to get updates\nReason: "+ex.getLocalizedMessage(), 
+					"Update error",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doReadLdrParts] Update error, library file:"+MySettings.LDR_LIB_PATH+
+					" - "+MySettings.LDR_UNOFF_LIB_PATH,ex);
+		} catch (InterruptedException e1) {
+			JOptionPane.showMessageDialog(frame, "Task interrupted!\nReason: "+e1.getLocalizedMessage(), "Task interrupted",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doReadLdrParts] Task interrupted",e1);
+		} catch (CancellationException ex) {
+			JOptionPane.showMessageDialog(frame,"Cancelled by user\nReason: "+ex.getLocalizedMessage(), "Task cancel",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.WARNING,"[doReadLdrParts] User cancel task",ex);
+		} catch (TimeoutException e1) {
+			JOptionPane.showMessageDialog(frame, "Timeout retrieving task output\nReason: "+e1.getLocalizedMessage(), "Task timeout",JOptionPane.ERROR_MESSAGE);
+			Logger.getGlobal().log(Level.SEVERE,"[doReadLdrParts] Task timeout",e1);
+		}
+		return false;
 	}
 
 
@@ -1914,16 +2118,12 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	
 	private void checkUpdate(boolean onStartup) {
 				
-		BusyDialog busyDialog = new BusyDialog(frame,"Update Parts and Colors",true,false,icnImg);
+		BusyDialog busyDialog = new BusyDialog(frame,"Update Parts and Colors",false,icnImg);
 		busyDialog.setLocationRelativeTo(frame);
 		CheckUpdate chk = new CheckUpdate(busyDialog, AppSettings.getInt(MySettings.UPDATE_SERIAL),AppSettings.get(MySettings.MAP_UPDATE_URL));
 		busyDialog.setTask(chk);
-		Timer timer = new Timer(200, busyDialog);
-		chk.execute();
-		timer.start();
-		busyDialog.setVisible(true);
+		busyDialog.startTask();
 		// after completing task return here
-		timer.stop();
 		try {
 			Integer[] i = chk.get(10, TimeUnit.MILLISECONDS);
 			if (i[0] == 0 && i[1] == 0) {
@@ -2075,8 +2275,8 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 				return;
 			if (!ldrSearchDlg.convertIds()) {
 				b = new Brick();
-				b.ldrawID = ldr.ldrid;
-				b.name = ldr.name;
+				b.ldrawID = ldr.getLdrawId();
+				b.name = ldr.getDescription();
 				b.designID = "";
 				b.masterID = "";
 				b.decorID = "";
@@ -2154,17 +2354,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		int retVal = fileBl.showOpenDialog(frame);
 		if (retVal == JFileChooser.APPROVE_OPTION) {
 			File fname = fileBl.getSelectedFile();
-			BusyDialog busyDialog = new BusyDialog(frame,"Update Bricklink parts",true,true,icnImg);
+			BusyDialog busyDialog = new BusyDialog(frame,"Update Bricklink parts",true,icnImg);
 			busyDialog.setLocationRelativeTo(frame);
 			BLPartImporter blptask = new BLPartImporter(fname);
 			busyDialog.setTask(blptask);
 			busyDialog.setMsg("Reading Bricklink parts from XML file...");
-			Timer timer = new Timer(200, busyDialog);
-			blptask.execute();
-			timer.start();
-			busyDialog.setVisible(true);
+			busyDialog.startTask();
 			// after completing task return here
-			timer.stop();
 			busyDialog.dispose();
 			try {
 				Integer i = blptask.get(10, TimeUnit.MILLISECONDS);
@@ -2206,17 +2402,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		int retVal = fileBl.showOpenDialog(frame);
 		if (retVal == JFileChooser.APPROVE_OPTION) {
 			fname = fileBl.getSelectedFile();
-			BusyDialog busyDialog = new BusyDialog(frame,"Update Bricklink sets",true,true,icnImg);
+			BusyDialog busyDialog = new BusyDialog(frame,"Update Bricklink sets",true,icnImg);
 			busyDialog.setLocationRelativeTo(frame);
 			BLSetImporter blstask = new BLSetImporter(fname);
 			busyDialog.setTask(blstask);
 			busyDialog.setMsg("Reading Bricklink sets from XML file...");
-			Timer timer = new Timer(200, busyDialog);
-			blstask.execute();
-			timer.start();
-			busyDialog.setVisible(true);
+			busyDialog.startTask();
 			// after completing task return here
-			timer.stop();
 			busyDialog.dispose();
 			try {
 				Integer i = blstask.get(10, TimeUnit.MILLISECONDS);
@@ -2279,17 +2471,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		int retVal = fileBl.showOpenDialog(frame);
 		if (retVal == JFileChooser.APPROVE_OPTION) {
 			fname = fileBl.getSelectedFile();
-			BusyDialog busyDialog = new BusyDialog(frame,"Update Bricklink categories",true,true,icnImg);
+			BusyDialog busyDialog = new BusyDialog(frame,"Update Bricklink categories",true,icnImg);
 			busyDialog.setLocationRelativeTo(frame);
 			BLCategoryImporter blctask = new BLCategoryImporter(fname);
 			busyDialog.setTask(blctask);
 			busyDialog.setMsg("Reading Bricklink categories from XML file...");
-			Timer timer = new Timer(200, busyDialog);
-			blctask.execute();
-			timer.start();
-			busyDialog.setVisible(true);
+			busyDialog.startTask();
 			// after completing task return here
-			timer.stop();
 			busyDialog.dispose();
 			try {
 				Integer i = blctask.get(10, TimeUnit.MILLISECONDS);
@@ -2441,7 +2629,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			ldrSearchDlg.setLocationRelativeTo(frame);
 			ldrSearchDlg.setVisible(true);
 			if (ldrSearchDlg.getResponse() == JOptionPane.OK_OPTION) {
-				LDrawPart ldr = ldrSearchDlg.getSelected();
+				bricksnspace.ldrawlib.LDrawPart ldr = ldrSearchDlg.getSelected();
 				if (ldr == null)
 					return;
 				int row = workingTable.convertRowIndexToModel(workingTable.getSelectedRow());
@@ -2459,12 +2647,12 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 					}
 				}
 				else {
-					workingTableModel.setValueAt(ldr.ldrid, row,4);
+					workingTableModel.setValueAt(ldr.getLdrawId(), row,4);
 					if (workingTableModel.getValueAt(row,8).equals("") ||
 							workingTableModel.getValueAt(row,8).equals("##newpart")) 
 					{
 						// if description is empty or "##newpart" copy part description 
-						workingTableModel.setValueAt(ldr.name, row,8);
+						workingTableModel.setValueAt(ldr.getDescription(), row,8);
 					}
 				}
 				ListSelectionEvent l = new ListSelectionEvent(workingTable.getSelectionModel(), row, row, false);
@@ -2491,17 +2679,13 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		int retVal = fileBl.showOpenDialog(frame);
 		if (retVal == JFileChooser.APPROVE_OPTION) {
 			fname = fileBl.getSelectedFile();
-			BusyDialog busyDialog = new BusyDialog(frame,"Import Bricklink parts list",true,true,icnImg);
+			BusyDialog busyDialog = new BusyDialog(frame,"Import Bricklink parts list",true,icnImg);
 			busyDialog.setLocationRelativeTo(frame);
 			ImportBlXMLTask blpltask = new ImportBlXMLTask(fname);
 			busyDialog.setTask(blpltask);
 			busyDialog.setMsg("Reading Bricklink parts list from XML file...");
-			Timer timer = new Timer(200, busyDialog);
-			blpltask.execute();
-			timer.start();
-			busyDialog.setVisible(true);
+			busyDialog.startTask();
 			// after completing task return here
-			timer.stop();
 			busyDialog.dispose();
 			try {
 				Integer i = blpltask.get(10, TimeUnit.MILLISECONDS);

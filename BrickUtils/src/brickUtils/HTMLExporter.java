@@ -28,14 +28,16 @@ import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.media.opengl.GLException;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.Timer;
 
+import bricksnspace.busydialog.BusyDialog;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
 
 
@@ -76,7 +78,7 @@ public class HTMLExporter {
 		if (retval != JOptionPane.OK_OPTION)
 			return;
 		File fname = fileExport.getSelectedFile();
-		BusyDialog busyDialog = new BusyDialog(frame,"Export HTML list",true,true,icnImg);
+		BusyDialog busyDialog = new BusyDialog(frame,"Export HTML list",true,icnImg);
 		busyDialog.setLocationRelativeTo(frame);
 		LDrawGLDisplay brickShape = null;
 		try {
@@ -85,17 +87,13 @@ public class HTMLExporter {
 			brickShape.getCanvas().setPreferredSize(new Dimension(Brick.getHtmImgSize(),Brick.getHtmImgSize()));
 			brickShape.update();
 		} catch (GLException e1) {
-			e1.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE, "[doExport] OpenGL exception", e1);
 		}
 		HtmlExportTask task = new HtmlExportTask(bricks,currentSet, brickShape,fname);
 		busyDialog.setTask(task);
 		busyDialog.setMsg("Writing HTML list...");
-		Timer timer = new Timer(200, busyDialog);
-		task.execute();
-		timer.start();
-		busyDialog.setVisible(true);
+		busyDialog.startTask();
 		// after completing task return here
-		timer.stop();
 		busyDialog.dispose();
 		try {
 			Integer r = task.get(10, TimeUnit.MILLISECONDS);

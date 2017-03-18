@@ -36,6 +36,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
+import bricksnspace.busydialog.BusyDialog;
+
 
 public class CheckUpdate extends SwingWorker<Integer[], Void> {
 

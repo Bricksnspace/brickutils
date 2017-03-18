@@ -22,6 +22,8 @@ package brickUtils;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
@@ -29,6 +31,8 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 
 import bricksnspace.bricklinklib.BricklinkPart;
+import bricksnspace.ldrawlib.LDrawLibDB;
+import bricksnspace.ldrawlib.LDrawPart;
 
 /*
  * Class for mapping part IDs between catalogs
@@ -236,6 +240,21 @@ public class PartMapping {
 	}
 	
 	
+	
+	// Special method to execute debug/diagnostic/repair query
+	// that needs to execute once at startup
+	// remove or comment code after use 
+	public static void special() throws SQLException {
+		
+		@SuppressWarnings("unused")
+		Statement st;
+		
+		st = db.conn.createStatement();
+		// put code here ----v----
+//		st.execute("INSERT INTO "+table + " (mapid) values (5596)");
+		// end code      ----^----
+		
+	}
 	
 	
 	public int insert() throws SQLException {
@@ -490,12 +509,12 @@ public class PartMapping {
 			else if (blp.size() == 0) {
 				// gets name from ldrpart, if any
 				if (b.ldrawID != "") {
-					ldrp = LDrawPart.getById(b.ldrawID);
+					ldrp = LDrawLibDB.getPart(b.ldrawID);
 					if (ldrp.size() > 1) {
-						throw new SQLException("Internal error: duplicated LDraw part in database\n"+ldrp.get(0));
+						Logger.getGlobal().log(Level.WARNING,"[getBrickByDesignId] Duplicated LDraw part in database ("+ldrp.size()+"): "+b.ldrawID);
 					}
-					else if (ldrp.size() == 1) {
-						b.name = ldrp.get(0).name;
+					if (ldrp.size() >= 1) {
+						b.name = ldrp.get(0).getDescription();
 					}
 				}
 			}
@@ -608,20 +627,16 @@ public class PartMapping {
 			}
 		}
 		// name from blparts or ldrparts
-		ldrp = LDrawPart.getById(b.ldrawID);
+		ldrp = LDrawLibDB.getPart(b.ldrawID);
 		if (ldrp.size() > 1) {
-			throw new SQLException("Internal error: duplicated LDraw part in database\n"+ldrp.get(0));
+			Logger.getGlobal().log(Level.WARNING,"[getBrickByLdrId] Duplicated LDraw part in database ("+ldrp.size()+"): "+b.ldrawID);
 		}
 		else if (ldrp.size() == 0) {
 			// Problem: your LDraw library are outdated
 			b.name = "Problem: part not found in LDraw part Library. Needs an update, maybe?";
 		}
-		else if (ldrp.get(0).deleted) {
-			// this is a deleted part!
-			b.name = "Problem: this is a deleted part. You have an old data file?";
-		}
-		else {  // if blp.size() == 1
-			b.name = ldrp.get(0).name;
+		if (ldrp.size() >= 1) {
+			b.name = ldrp.get(0).getDescription();
 		}
 		return b;
 	}
@@ -682,7 +697,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String bl = rs.getString("blid");
-				throw new IllegalStateException("Duplicated part\n"+
+				throw new SQLException("Duplicated part\n"+
 						"Design ID: "+designid+"->"+
 						"BLink ID:  "+blid+"\n"+
 						"is already mapped as\n"+
@@ -704,7 +719,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String ldraw = rs.getString("ldrawid");
-				throw new IllegalStateException("Duplicated part\n"+
+				throw new SQLException("Duplicated part\n"+
 						"Design ID: "+designid+"->"+
 						"LDraw ID:  "+ldrawid+"\n"+
 						"is already mapped as\n"+
@@ -726,7 +741,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String bl = rs.getString("blid");
-				throw new IllegalStateException("Duplicated part\n"+
+				throw new SQLException("Duplicated part\n"+
 						"BLink ID: "+blid+"->"+
 						"Design ID:  "+designid+"\n"+
 						"is already mapped as\n"+
@@ -748,7 +763,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String lddid = rs.getString("designid");
 				String ldraw = rs.getString("ldrawid");
-				throw new IllegalStateException("Duplicated part\n"+
+				throw new SQLException("Duplicated part\n"+
 						"LDRaw ID: "+ldrawid+"->"+
 						"Design ID:  "+designid+"\n"+
 						"is already mapped as\n"+
@@ -768,7 +783,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String ldraw = rs.getString("ldrawid");
 				String bl = rs.getString("blid");
-				throw new IllegalStateException("Duplicated part\n"+
+				throw new SQLException("Duplicated part\n"+
 						"BLink ID: "+blid+"->"+
 						"LDraw ID:  "+ldrawid+"\n"+
 						"is already mapped as\n"+
@@ -788,7 +803,7 @@ public class PartMapping {
 			if (rs.next()) {
 				String bl = rs.getString("blid");
 				String ldraw = rs.getString("ldrawid");
-				throw new IllegalStateException("Duplicated part\n"+
+				throw new SQLException("Duplicated part\n"+
 						"LDRaw ID: "+ldrawid+"->"+
 						"BLink ID:  "+blid+"\n"+
 						"is already mapped as\n"+

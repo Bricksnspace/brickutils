@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -45,16 +45,20 @@ public class BusyDialog extends JDialog implements ActionListener {
 	private JProgressBar pgr;
 	private ImageIcon[] animIcn;
 	private static int icnFrame = 0;
+	private Timer timer;
 
-	public BusyDialog(JFrame owner, String title, boolean modal, boolean progress, ImageIcon[] icn) {
+	
+	public BusyDialog(JFrame owner, String title, boolean progress, ImageIcon[] icn) {
 		
-		super(owner,title,modal);
+		super(owner,title,true);
 		this.progress = progress;
 		animIcn = icn;
 		setLocationByPlatform(true);
 		getRootPane().setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
 		msg = new JLabel("...                ");
-		msg.setIcon(animIcn[0]);
+		if (animIcn != null) { 
+			msg.setIcon(animIcn[0]);
+		}
 		getContentPane().setLayout(new BoxLayout(this.getContentPane(), BoxLayout.Y_AXIS));
 		getContentPane().add(msg);
 		if (progress) {
@@ -77,15 +81,30 @@ public class BusyDialog extends JDialog implements ActionListener {
 	}
 	
 	
+	
+	public void startTask() {
+
+		timer = new Timer(300,this);
+		task.execute();
+		timer.start();
+		setVisible(true);
+	}
+	
+	
+	
 	public void setMsg(String txt) {
 		
 		msg.setText(txt);
+		pack();
 	}
+	
 	
 	public void setIcon(ImageIcon icn) {
 		
 		msg.setIcon(icn);
+		pack();
 	}
+	
 	
 	public void setProgress(int val) {
 		
@@ -103,29 +122,33 @@ public class BusyDialog extends JDialog implements ActionListener {
 	
 	public void actionPerformed(ActionEvent e) {
 		
-		if (task.isDone()) {
-			setVisible(false);
-			((Timer)e.getSource()).stop();
-			return;
-		}
-		else {
-			if (!isVisible()) {
-				setVisible(true);
-			}
-		}
-		msg.setIcon(animIcn[icnFrame]);
-		if (progress) {
-			int val = task.getProgress();
-			if (val == 0) {
-				pgr.setIndeterminate(true);
+		if (e.getSource() == timer) {
+			if (task.isDone()) {
+				setVisible(false);
+				timer.stop();
+				return;
 			}
 			else {
-				pgr.setIndeterminate(false);
-				pgr.setValue(val);
-			}	
+				if (!isVisible()) {
+					setVisible(true);
+				}
+			}
+			if (animIcn != null) {
+				msg.setIcon(animIcn[icnFrame]);
+				icnFrame = (icnFrame +1) % animIcn.length;
+			}
+			if (progress) {
+				int val = task.getProgress();
+				if (val == 0) {
+					pgr.setIndeterminate(true);
+				}
+				else {
+					pgr.setIndeterminate(false);
+					pgr.setValue(val);
+				}	
+			}
+			pack();
 		}
-		icnFrame = (icnFrame +1) % animIcn.length;
-		pack();
 	}
 	
 	

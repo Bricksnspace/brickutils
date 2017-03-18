@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -36,6 +36,8 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.media.opengl.GLException;
 import javax.swing.ImageIcon;
@@ -49,11 +51,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.Timer;
 
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
 
+import bricksnspace.busydialog.BusyDialog;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
 import bricksnspace.ldrawlib.LDrawLib;
 
@@ -267,7 +269,7 @@ public class TemplateExportDialog extends JDialog implements ActionListener {
 			bricks.add(new ExportedBrick(b));
 		}
 		velCon.put("bricks",bricks);
-		BusyDialog busyDialog = new BusyDialog((JFrame)this.getOwner(),"Export list",true,true,icnImg);
+		BusyDialog busyDialog = new BusyDialog((JFrame)this.getOwner(),"Export list",true,icnImg);
 		busyDialog.setLocationRelativeTo((JFrame)this.getOwner());
 		LDrawGLDisplay brickShape = null;
 		try {
@@ -275,7 +277,7 @@ public class TemplateExportDialog extends JDialog implements ActionListener {
 			brickShape = new LDrawGLDisplay();
 			brickShape.getCanvas().setPreferredSize(new Dimension(Brick.getHtmImgSize(),Brick.getHtmImgSize()));
 		} catch (GLException e1) {
-			e1.printStackTrace();
+			Logger.getGlobal().log(Level.SEVERE, "[doExport] OpenGL exception", e1);
 		}
 		TemplateExportTask task = new TemplateExportTask(bricks,expSet,
 				brickShape,velCon,templateFile,outputFile);
@@ -283,12 +285,8 @@ public class TemplateExportDialog extends JDialog implements ActionListener {
 		task.embedImages(embedImg.isSelected());
 		busyDialog.setTask(task);
 		busyDialog.setMsg("Writing exported list...");
-		Timer timer = new Timer(200, busyDialog);
-		task.execute();
-		timer.start();
-		busyDialog.setVisible(true);
+		busyDialog.startTask();
 		// after completing task return here
-		timer.stop();
 		busyDialog.dispose();
 		try {
 			Integer r = task.get(10, TimeUnit.MILLISECONDS);

@@ -22,6 +22,8 @@ package brickUtils;
 import java.util.ArrayList;
 import javax.swing.table.AbstractTableModel;
 
+import bricksnspace.ldrawlib.LDrawPart; 
+
 /*
  * table model to display Ldraw part search results
  */
@@ -31,14 +33,11 @@ public class LdrTableModel extends AbstractTableModel {
 	private ArrayList<LDrawPart> parts;
 
 	private String[] columnNames = {
-			"ID",
 			"LDraw part ID",
 			"Description",
 			"Category",
 			"Keywords",
-			"Deleted",
-			"Official",
-			"Updated on"
+			"Official"
 			};
 	
 	/* 
@@ -61,8 +60,7 @@ public class LdrTableModel extends AbstractTableModel {
 		switch (c) {
 		case 0:
 			return Integer.class;
-		case 5:
-		case 6:
+		case 4:
 			return Boolean.class;
 		}
 		return String.class;
@@ -88,6 +86,7 @@ public class LdrTableModel extends AbstractTableModel {
         return false;
     }
 	
+	
 	public LDrawPart getPart(int idx) {
 		return parts.get(idx);
 	}
@@ -101,22 +100,15 @@ public class LdrTableModel extends AbstractTableModel {
 		//id,ldrid,name,category,keywords
 		switch (arg1) {
 		case 0:
-			return parts.get(arg0).id;
+			return parts.get(arg0).getLdrawId();
 		case 1:
-			return parts.get(arg0).ldrid;
+			return parts.get(arg0).getDescription();
 		case 2:
-			return parts.get(arg0).name;
+			return parts.get(arg0).getCategory();
 		case 3:
-			return parts.get(arg0).category;
+			return parts.get(arg0).getKeywords();
 		case 4:
-			return parts.get(arg0).keywords;
-		case 5:
-			return parts.get(arg0).deleted;
-		case 6:
-			return parts.get(arg0).official;
-		case 7:
-			return parts.get(arg0).lastmod;
-
+			return parts.get(arg0).isFromOfficial();
 		}
 		return null;
 	}

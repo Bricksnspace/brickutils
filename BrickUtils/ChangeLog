@@ -1,3 +1,7 @@
+2017-03-31  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/PartMapping.java (special): added static method to correct some DB error on startup
+
 2017-03-10  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/Brick.java (Brick): removed references to BrickException 
