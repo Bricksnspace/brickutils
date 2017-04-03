@@ -1,3 +1,7 @@
+2017-04-03  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/brickUtils.java (firstRun): after downloading LDraw library didn't import it: fixed
+
 2017-03-31  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/PartMapping.java (special): added static method to correct some DB error on startup

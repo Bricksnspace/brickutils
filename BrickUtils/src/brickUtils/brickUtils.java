@@ -1275,6 +1275,19 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 							Logger.getGlobal().log(Level.SEVERE,"LDraw Library error, unable to download files");
 							System.exit(1);
 						}
+						try {
+							ldl = new LDrawLib(AppSettings.get(MySettings.LDR_LIB_PATH), dbc);
+							if (!ldl.isLDrawStd(LDrawLib.OFFICIALINDEX))
+								throw new IOException("LDraw Library in default path isn't a standard library");
+							File fu = new File(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH));
+							if (fu.exists())
+								ldl.addLDLib(AppSettings.get(MySettings.LDR_UNOFF_LIB_PATH), true);
+						} catch (IOException | SQLException e) {
+							JOptionPane.showMessageDialog(frame, "Unable to use downloaded LDraw libraries\nExiting now...", 
+									"Library error",JOptionPane.ERROR_MESSAGE);
+							Logger.getGlobal().log(Level.SEVERE,"LDraw Library error, unable to use downloaded library", e);
+							System.exit(1);
+						}
 					}
 					else {
 						// manually select a library

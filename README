@@ -1,0 +1,34 @@
+README for BrickUtils
+
+This is an utility for MOC builder.
+It was actively developed from 2012 to 2015. 
+I don't have much time, so I put last release here.  
+
+Feature list:
+
+* Imports LDD project file (LXF or LXFML)
+* Imports BrickLink set inventory, store inventory, order inventory
+* Imports LDraw file format (MPD or LDR)
+* Manage your collection of bricks, sets and bulk lots
+* Display brick shape in 3D (from LDraw part library)
+* Checks if you can build a model (from LDD, LDraw or a BrickLink set) against your brick catalog, and helps you to find alternate bricks
+* Exports BrickLink "Wanted Mass Upload" XML file, to buy bricks on BrickLink
+* Exports lists in printable HTML to helps pick bricks from your collection (a bill of materials)
+* Exports wanted lists in user-defined format via templates (see manual)
+* New releases check at startup
+* Database update via Internet
+* Imports and exports your bricks and sets catalog in XML format, for backup and upgrades
+* Faster full text search in BrickLink and LDraw databases
+* "Can Build?" function now includes an "export" button to create a wanted mass upload file from missing bricks, accepted by BrickLink
+
+It depends on some other packages:
+- SimpleGeometry https://github.com/Bricksnspace/simplegeometry
+- AppSettings https://github.com/Bricksnspace/app-settings
+- DBConnector https://github.com/Bricksnspace/dbconnector
+- BrickLinkLib https://github.com/Bricksnspace/bricklinklib
+- BusyDialog https://github.com/Bricksnspace/busydialog
+- LDrawLib https://github.com/Bricksnspace/ldrawlib
+- LDraw3D https://github.com/Bricksnspace/ldraw3d
+
+All these are here on GitHub.
+
