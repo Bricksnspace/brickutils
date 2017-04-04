@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -44,6 +44,7 @@ import javax.xml.stream.events.StartElement;
 
 import org.apache.commons.codec.binary.Base64;
 
+import bricksnspace.dbconnector.DBConnector;
 import bricksnspace.j3dgeom.Matrix3D;
 import bricksnspace.ldraw3d.LDRenderedPart;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
@@ -87,7 +88,7 @@ public class Brick {
 	private static boolean frontAndRear = true;
 	
 	
-    private static BrickDB db;
+    private static DBConnector db;
 	private static PreparedStatement insertTmpPS = null;
 	private static PreparedStatement insertTmpIdPS = null;
 	private static PreparedStatement updateTmpPS = null;
@@ -242,18 +243,18 @@ public class Brick {
 
 	
 	
-	public static void setDb(BrickDB bdb) throws SQLException {
+	public static void setDb(DBConnector bdb) throws SQLException {
 
 		db = bdb;
 		// prepared statements
 		// importing table
-		insertTmpPS = db.conn.prepareStatement("INSERT INTO "+tmpTable+" ("+fieldsOrder+
+		insertTmpPS = db.prepareStatement("INSERT INTO "+tmpTable+" ("+fieldsOrder+
 				") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
 				);
-		insertTmpIdPS  = db.conn.prepareStatement("INSERT INTO "+tmpTable+" ("+fieldsOrder+
+		insertTmpIdPS  = db.prepareStatement("INSERT INTO "+tmpTable+" ("+fieldsOrder+
 				",id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
 				);
-		updateTmpPS  = db.conn.prepareStatement("UPDATE "+tmpTable+" SET " +
+		updateTmpPS  = db.prepareStatement("UPDATE "+tmpTable+" SET " +
 				"masterid=?," +
 				"designid=?," +
 				"partno=?," +
@@ -270,10 +271,10 @@ public class Brick {
 				);
 		
 		// working table
-		insertWorkPS = db.conn.prepareStatement("INSERT INTO "+workTable+" ("+fieldsOrder+
+		insertWorkPS = db.prepareStatement("INSERT INTO "+workTable+" ("+fieldsOrder+
 				") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
 				);
-		updateWorkPS = db.conn.prepareStatement("UPDATE "+workTable+" SET " +
+		updateWorkPS = db.prepareStatement("UPDATE "+workTable+" SET " +
 				"masterid=?," +
 				"designid=?," +
 				"partno=?," +
@@ -288,16 +289,16 @@ public class Brick {
 				"matchid=? " +
 				" WHERE id=?"
 				);
-		deleteWorkPS = db.conn.prepareStatement("DELETE FROM "+workTable+" where id=?");
+		deleteWorkPS = db.prepareStatement("DELETE FROM "+workTable+" where id=?");
 
 		// catalog table
-		insertCatalogPS = db.conn.prepareStatement("INSERT INTO "+catalogTable+" ("+fieldsOrder+
+		insertCatalogPS = db.prepareStatement("INSERT INTO "+catalogTable+" ("+fieldsOrder+
 				") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
 				);
-		insertCatalogIdPS = db.conn.prepareStatement("INSERT INTO "+catalogTable+" ("+fieldsOrder+
+		insertCatalogIdPS = db.prepareStatement("INSERT INTO "+catalogTable+" ("+fieldsOrder+
 				",id) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
 				);
-		updateCatalogPS = db.conn.prepareStatement("UPDATE "+catalogTable+" SET " +
+		updateCatalogPS = db.prepareStatement("UPDATE "+catalogTable+" SET " +
 				"masterid=?," +
 				"designid=?," +
 				"partno=?," +
@@ -312,8 +313,8 @@ public class Brick {
 				"matchid=? " +
 				" WHERE id=?"
 				);
-		deleteCatalogPS = db.conn.prepareStatement("DELETE FROM "+catalogTable+" where id=?");
-		getCatIdPS = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+catalogTable+" WHERE " +
+		deleteCatalogPS = db.prepareStatement("DELETE FROM "+catalogTable+" where id=?");
+		getCatIdPS = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+catalogTable+" WHERE " +
 				"masterid=? and " +
 				"designid=? and " +
 				"partno=? and " +
@@ -321,7 +322,7 @@ public class Brick {
 				"ldrawid=? and " +
 				"color=? and " +
 				"decorid=?");
-		getTmpIdPS = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE " +
+		getTmpIdPS = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE " +
 				"masterid=? and " +
 				"designid=? and " +
 				"partno=? and " +
@@ -329,7 +330,7 @@ public class Brick {
 				"ldrawid=? and " +
 				"color=? and " +
 				"decorid=?");
-		getWorkIdPS = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+workTable+" WHERE " +
+		getWorkIdPS = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+workTable+" WHERE " +
 				"masterid=? and " +
 				"designid=? and " +
 				"partno=? and " +
@@ -337,15 +338,15 @@ public class Brick {
 				"ldrawid=? and " +
 				"color=? and " +
 				"decorid=?");
-		updCatQtyPS = db.conn.prepareStatement("UPDATE "+catalogTable+" SET " +
+		updCatQtyPS = db.prepareStatement("UPDATE "+catalogTable+" SET " +
 				"quantity=quantity+? " +
 				" WHERE id=?"
 				);
-		updTmpQtyPS = db.conn.prepareStatement("UPDATE "+tmpTable+" SET " +
+		updTmpQtyPS = db.prepareStatement("UPDATE "+tmpTable+" SET " +
 				"quantity=quantity+? " +
 				" WHERE id=?"
 				);
-		updWorkQtyPS = db.conn.prepareStatement("UPDATE "+workTable+" SET " +
+		updWorkQtyPS = db.prepareStatement("UPDATE "+workTable+" SET " +
 				"quantity=quantity+? " +
 				" WHERE id=?"
 				);
@@ -596,7 +597,7 @@ public class Brick {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		st.execute("DROP TABLE IF EXISTS "+tmpTable+"; " +
 				"CREATE TEMP TABLE "+tmpTable+" (" +
 				"id INT PRIMARY KEY AUTO_INCREMENT," +
@@ -738,7 +739,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE id=?");
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE id=?");
 		ps.setInt(1, id);
 		return getPS(ps);
 	}
@@ -749,7 +750,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE NOT alt");
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE NOT alt");
 		return getPS(ps);
 	}
 	
@@ -758,7 +759,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE NOT alt and quantity>0");
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE NOT alt and quantity>0");
 		return getPS(ps);
 	}
 	
@@ -767,7 +768,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE NOT alt and quantity<0");
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE NOT alt and quantity<0");
 		return getPS(ps);
 	}
 	
@@ -780,7 +781,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE matchid=? AND alt");
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+tmpTable+" WHERE matchid=? AND alt");
 		ps.setInt(1, matchid);
 		return getPS(ps);
 	}
@@ -822,7 +823,7 @@ public class Brick {
 
 	public static void emptyWork() throws SQLException {
 		
-		PreparedStatement ps = db.conn.prepareStatement("DELETE FROM "+workTable+";" +
+		PreparedStatement ps = db.prepareStatement("DELETE FROM "+workTable+";" +
 				"ALTER TABLE "+workTable+" ALTER COLUMN ID RESTART WITH 1");
 		ps.executeUpdate();
 	}
@@ -926,7 +927,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+workTable);
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+workTable);
 		return getPS(ps);
 	}
 	
@@ -1009,7 +1010,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+catalogTable+" WHERE id=?");
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+catalogTable+" WHERE id=?");
 		ps.setInt(1, id);
 		ArrayList<Brick> b = getPS(ps);
 		if (b.size() == 0)
@@ -1022,7 +1023,7 @@ public class Brick {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+catalogTable);
+		ps = db.prepareStatement("SELECT id,"+fieldsOrder+" FROM "+catalogTable);
 		return getPS(ps);
 	}
 	
@@ -1116,7 +1117,7 @@ public class Brick {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		st.executeUpdate("DELETE from "+workTable+"; INSERT INTO "+workTable+" SELECT * FROM "+tmpTable+" WHERE NOT alt");
 	}
 	
@@ -1127,7 +1128,7 @@ public class Brick {
 		PreparedStatement ps;
 		ResultSet rs;
 		
-		ps = db.conn.prepareStatement("SELECT count(*) AS parts, SUM(quantity) AS bricks FROM "+ workTable);
+		ps = db.prepareStatement("SELECT count(*) AS parts, SUM(quantity) AS bricks FROM "+ workTable);
 		rs = ps.executeQuery();
 		rs.next();
 		return new int[] {rs.getInt(1),rs.getInt(2)};
@@ -1141,7 +1142,7 @@ public class Brick {
 		PreparedStatement ps;
 		ResultSet rs;
 		
-		ps = db.conn.prepareStatement("SELECT count(*) AS parts, SUM(quantity) AS bricks FROM "+ tmpTable);
+		ps = db.prepareStatement("SELECT count(*) AS parts, SUM(quantity) AS bricks FROM "+ tmpTable);
 		rs = ps.executeQuery();
 		rs.next();
 		return new int[] {rs.getInt(1),rs.getInt(2)};
@@ -1166,7 +1167,7 @@ public class Brick {
 		Brick.createTmpTable();
 		if (mode == BRICK_ALL) {
 			// gets all bricks
-			ps = db.conn.prepareStatement("INSERT INTO " + Brick.tmpTable + 
+			ps = db.prepareStatement("INSERT INTO " + Brick.tmpTable + 
 					" (masterid,designid,partno,name,blid,ldrawid,color,decorid,quantity) " +
 					"SELECT c.masterid,c.designid,c.partno,c.name,c.blid,c.ldrawid,c.color,c.decorid,s.qty FROM " +
 					Brick.catalogTable + " AS c JOIN (SELECT brickid,SUM(quantity) as qty FROM " + BrickSet.brickTable +
@@ -1174,7 +1175,7 @@ public class Brick {
 		}
 		else if (mode == BRICK_AVAIL) {
 			// gets only avail bricks
-			ps = db.conn.prepareStatement("INSERT INTO " + Brick.tmpTable + 
+			ps = db.prepareStatement("INSERT INTO " + Brick.tmpTable + 
 					" (masterid,designid,partno,name,blid,ldrawid,color,decorid,quantity) " +
 					"SELECT c.masterid,c.designid,c.partno,c.name,c.blid,c.ldrawid,c.color,c.decorid,s.qty FROM " +
 					Brick.catalogTable + " AS c JOIN (SELECT brickid,SUM(quantity) as qty FROM " + BrickSet.brickTable +
@@ -1183,7 +1184,7 @@ public class Brick {
 		} 
 		else if (mode == BRICK_SELECTED) {
 			// gets only avail bricks
-			ps = db.conn.prepareStatement("INSERT INTO " + Brick.tmpTable + 
+			ps = db.prepareStatement("INSERT INTO " + Brick.tmpTable + 
 					" (masterid,designid,partno,name,blid,ldrawid,color,decorid,quantity) " +
 					"SELECT c.masterid,c.designid,c.partno,c.name,c.blid,c.ldrawid,c.color,c.decorid,s.qty FROM " +
 					Brick.catalogTable + " AS c JOIN (SELECT brickid,SUM(quantity) as qty FROM " + BrickSet.brickTable +
@@ -1191,7 +1192,7 @@ public class Brick {
 					" GROUP BY brickid) AS s ON (s.brickid=c.id)");
 		}
 		ps.executeUpdate();
-		ps = db.conn.prepareStatement("SELECT w.id AS id, w.masterid AS masterid, w.designid AS designid," +
+		ps = db.prepareStatement("SELECT w.id AS id, w.masterid AS masterid, w.designid AS designid," +
 				"w.partno AS partno,w.name AS name,w.blid AS blid,w.ldrawid AS ldrawid,w.color AS color,w.decorid AS decorid," +
 				"COALESCE((w.quantity-a.quantity),w.quantity) AS quantity, 0 AS matchid, FALSE AS extra," +
 				"FALSE AS alt FROM "+Brick.workTable+" AS w LEFT OUTER JOIN "+Brick.tmpTable+" AS a " +
@@ -1246,7 +1247,7 @@ public class Brick {
 				decorCondition + " AND " +
 				colorCondition + " AND " +
 				"COALESCE((a.quantity-w.quantity),a.quantity) > 0";
-		ps = db.conn.prepareStatement(query);
+		ps = db.prepareStatement(query);
 		if (!ignoreDecoration) {
 			ps.setString(idx, b.designID);
 			idx++;

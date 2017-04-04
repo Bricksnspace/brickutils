@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -33,6 +33,7 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 
 import bricksnspace.appsettings.AppSettings;
+import bricksnspace.dbconnector.DBConnector;
 
 
 
@@ -50,7 +51,7 @@ public class BrickSet {
 	public boolean selected;
 	public Timestamp lastmod;
 
-	private static BrickDB db;
+	private static DBConnector db;
 	private static PreparedStatement insSetPS = null;
 	private static PreparedStatement delSetPS = null;
 	private static PreparedStatement updSetPS = null;
@@ -153,14 +154,14 @@ public class BrickSet {
 	}
 
 
-	public static void setDb(BrickDB bdb) throws SQLException {
+	public static void setDb(DBConnector bdb) throws SQLException {
 
 		db = bdb;
 		// prepared statement
-		insSetPS = db.conn.prepareStatement("INSERT INTO "+setTable+" ("+fieldsSetOrder+
+		insSetPS = db.prepareStatement("INSERT INTO "+setTable+" ("+fieldsSetOrder+
 				") VALUES (?,?,?,?,?,?,?,?,?,NOW())"
 				);
-		updSetPS = db.conn.prepareStatement("UPDATE "+setTable+" SET " +
+		updSetPS = db.prepareStatement("UPDATE "+setTable+" SET " +
 				"setid=?," +
 				"type=?," +
 				"name=?," +
@@ -171,18 +172,18 @@ public class BrickSet {
 				"available=?," +
 				"selected=? " +
 				" WHERE id=?");
-		delSetPS = db.conn.prepareStatement("DELETE FROM "+setTable+" where id=?");
+		delSetPS = db.prepareStatement("DELETE FROM "+setTable+" where id=?");
 		
 		// brick/set table
-		insBrickPS  = db.conn.prepareStatement("INSERT INTO "+brickTable+" ("+fieldsBrickOrder+
+		insBrickPS  = db.prepareStatement("INSERT INTO "+brickTable+" ("+fieldsBrickOrder+
 				") VALUES (?,?,?)"
 				);
-//		updBrickPS = db.conn.prepareStatement("UPDATE "+brickTable+" SET " +
+//		updBrickPS = db.prepareStatement("UPDATE "+brickTable+" SET " +
 //				"setid=?," +
 //				"brickid=?," +
 //				"quantity=? " +
 //				" WHERE id=?");
-		delBrickPS = db.conn.prepareStatement("DELETE FROM "+brickTable+" where setid=?");
+		delBrickPS = db.prepareStatement("DELETE FROM "+brickTable+" where setid=?");
 	}
 	
 
@@ -190,7 +191,7 @@ public class BrickSet {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		//setid,type,name,category,year,catid,notes,available,selected,lastmod"
 		st.execute("DROP TABLE IF EXISTS "+setTable+"; " +
 				"CREATE TABLE "+setTable+" (" +
@@ -283,7 +284,7 @@ public class BrickSet {
 		
 		if (updateCatalog) {
 			// also remove bricks from catalog
-			PreparedStatement ps = db.conn.prepareStatement("SELECT brickid,quantity FROM "+
+			PreparedStatement ps = db.prepareStatement("SELECT brickid,quantity FROM "+
 					brickTable+" WHERE setid=?");
 			ps.setInt(1, id);
 			ResultSet rs = ps.executeQuery();
@@ -332,7 +333,7 @@ public class BrickSet {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT DISTINCT id,"+fieldsSetOrder+" FROM "+setTable+" WHERE " +
+		ps = db.prepareStatement("SELECT DISTINCT id,"+fieldsSetOrder+" FROM "+setTable+" WHERE " +
 				"id IN (SELECT setid FROM "+brickTable+" WHERE brickid=?)");
 		ps.setInt(1, brickid);
 		return getPS(ps);
@@ -343,7 +344,7 @@ public class BrickSet {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("UPDATE "+setTable+" SET selected=false");
+		ps = db.prepareStatement("UPDATE "+setTable+" SET selected=false");
 		ps.execute();
 	}
 	
@@ -352,7 +353,7 @@ public class BrickSet {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("UPDATE "+setTable+" SET selected=true WHERE id=?");
+		ps = db.prepareStatement("UPDATE "+setTable+" SET selected=true WHERE id=?");
 		ps.setInt(1, id);
 		ps.execute();
 	}
@@ -364,7 +365,7 @@ public class BrickSet {
 		int index = 0;
 		
 		index = AppSettings.getInt(MySettings.CURRENT_SET);
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsSetOrder+" FROM "+setTable+" WHERE id!=?");
+		ps = db.prepareStatement("SELECT id,"+fieldsSetOrder+" FROM "+setTable+" WHERE id!=?");
 		ps.setInt(1, index);
 		return getPS(ps);
 
@@ -376,7 +377,7 @@ public class BrickSet {
 		PreparedStatement ps;
 		ArrayList<BrickSet> bs;
 		
-		ps = db.conn.prepareStatement("SELECT id,"+fieldsSetOrder+" FROM "+setTable+" WHERE id=?");
+		ps = db.prepareStatement("SELECT id,"+fieldsSetOrder+" FROM "+setTable+" WHERE id=?");
 		ps.setInt(1, id);
 		bs = getPS(ps);
 		if (bs.size() == 0) {
@@ -393,7 +394,7 @@ public class BrickSet {
 
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT "+fieldsBrickOrder+" FROM "+brickTable+" WHERE setid=?");
+		ps = db.prepareStatement("SELECT "+fieldsBrickOrder+" FROM "+brickTable+" WHERE setid=?");
 		ps.setInt(1, id);
 		ResultSet rs = ps.executeQuery();
 		int id, qty;
@@ -471,7 +472,7 @@ public class BrickSet {
 		xsw.writeAttribute("available",available?"1":"0");
 		xsw.writeAttribute("selected",selected?"1":"0");
 		xsw.writeCharacters("\n");
-		ps = db.conn.prepareStatement("SELECT "+fieldsBrickOrder+" FROM "+brickTable+" WHERE setid=?");
+		ps = db.prepareStatement("SELECT "+fieldsBrickOrder+" FROM "+brickTable+" WHERE setid=?");
 		ps.setInt(1, id);
 		ResultSet rs = ps.executeQuery();
 		int brickid, qty;

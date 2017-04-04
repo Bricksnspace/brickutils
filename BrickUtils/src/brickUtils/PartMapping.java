@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -31,6 +31,7 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 
 import bricksnspace.bricklinklib.BricklinkPart;
+import bricksnspace.dbconnector.DBConnector;
 import bricksnspace.ldrawlib.LDrawLibDB;
 import bricksnspace.ldrawlib.LDrawPart;
 
@@ -62,7 +63,7 @@ public class PartMapping {
 	private static PreparedStatement updatePS = null;
 	private static PreparedStatement insertPS = null;
 	private static PreparedStatement selectPS = null;
-	private static BrickDB db;
+	private static DBConnector db;
 
     
     public PartMapping() {
@@ -144,13 +145,13 @@ public class PartMapping {
     }
 
     
-	public static void setDb(BrickDB bdb) throws SQLException {
+	public static void setDb(DBConnector bdb) throws SQLException {
 
 		db = bdb;
-		insertPS = db.conn.prepareStatement("INSERT INTO "+table +
+		insertPS = db.prepareStatement("INSERT INTO "+table +
 				" ("+fieldsOrder+") " +
 				"VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW())",Statement.RETURN_GENERATED_KEYS);
-		updatePS = db.conn.prepareStatement("UPDATE "+table+" SET " +
+		updatePS = db.prepareStatement("UPDATE "+table+" SET " +
 				"masterid=?," +
 				"designid=?," +
 				"blid=?," +
@@ -165,9 +166,9 @@ public class PartMapping {
 				"decorid=?," +
 				"lastmod=NOW() " +
 				"WHERE mapid=?");
-		deletePS = db.conn.prepareStatement("DELETE FROM "+table+
+		deletePS = db.prepareStatement("DELETE FROM "+table+
 				" WHERE mapid=?; COMMIT ");
-		selectPS  = db.conn.prepareStatement(
+		selectPS  = db.prepareStatement(
 				"SELECT mapid," + fieldsOrder +
 				" FROM "+table);
 
@@ -180,7 +181,7 @@ public class PartMapping {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		try {
 			// drop old index, if exists
 			st.execute("CALL FTL_DROP_INDEX('PUBLIC','PARTMAPPING') ");
@@ -212,7 +213,7 @@ public class PartMapping {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		try {
 			// drop old index, if exists
 			st.execute("CALL FTL_DROP_INDEX('PUBLIC','PARTMAPPING') ");
@@ -229,7 +230,7 @@ public class PartMapping {
 
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		try {
 			// drop old index, if exists
 			st.execute("CALL FTL_DROP_INDEX('PUBLIC','PARTMAPPING') ");
@@ -249,7 +250,7 @@ public class PartMapping {
 		@SuppressWarnings("unused")
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		// put code here ----v----
 //		st.execute("INSERT INTO "+table + " (mapid) values (5596)");
 		// end code      ----^----
@@ -321,7 +322,7 @@ public class PartMapping {
 		if (filterExpr == null)
 			rs = selectPS.executeQuery();
 		else {
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT " +
 					"mapid," + fieldsOrder + 
 					" FROM "+table+" where "+filterExpr);
@@ -389,11 +390,11 @@ public class PartMapping {
 
 		if (filterExpr != null) {
 			if (filter == null) {
-				ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM FTL_SEARCH_DATA('"+filterExpr+"',0,0) f " +
+				ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM FTL_SEARCH_DATA('"+filterExpr+"',0,0) f " +
 						"LEFT JOIN "+table+" b on (f.keys[0]=b.mapid) WHERE f.table='PARTMAPPING'");
 			}
 			else {
-				ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM FTL_SEARCH_DATA('"+filterExpr+"',0,0) f " +
+				ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM FTL_SEARCH_DATA('"+filterExpr+"',0,0) f " +
 						"LEFT JOIN "+table+" b on (f.keys[0]=b.mapid) WHERE f.table='PARTMAPPING' AND "+filter);
 			}
 			return getPS(ps);
@@ -408,7 +409,7 @@ public class PartMapping {
 		
 		PreparedStatement ps;
 		
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+
 				" FROM "+table+" where lastmod > TIMESTAMPADD(MINUTE,-15,SELECT MAX(lastmod) from "+table+")");
 		return getPS(ps);
 	}
@@ -421,7 +422,7 @@ public class PartMapping {
 		ResultSet rs;
 		Timestamp last[] = new Timestamp[5];
 		
-		ps = db.conn.prepareStatement("SELECT FORMATDATETIME(lastmod,'yyyy-MM-dd') as datemod "+
+		ps = db.prepareStatement("SELECT FORMATDATETIME(lastmod,'yyyy-MM-dd') as datemod "+
 				" FROM "+table+" GROUP BY datemod ORDER BY datemod DESC LIMIT 5");
 		rs = ps.executeQuery();
 		int i = 0;
@@ -438,7 +439,7 @@ public class PartMapping {
 	public static ArrayList<PartMapping> getModifiedAfter(Timestamp lastmodified) throws SQLException {
 		
 		PreparedStatement ps;
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+
 				" where lastmod>=?");
 		ps.setTimestamp(1, lastmodified);
 		return getPS(ps);
@@ -462,11 +463,11 @@ public class PartMapping {
 			b.decorID = decorid;
 		}
 		if (decorid == null || decorid.length() == 0) {
-			ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2dat and decorid=''");
+			ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2dat and decorid=''");
 			ps.setString(1, designid);
 		}
 		else {
-			ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2dat and decorid=?");
+			ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2dat and decorid=?");
 			ps.setString(1, designid);
 			ps.setString(2, decorid);
 		}
@@ -482,11 +483,11 @@ public class PartMapping {
 		}
 		// get bl part equivalence
 		if (decorid == null || decorid.length() == 0) {
-			ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2bl and decorid=''");
+			ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2bl and decorid=''");
 			ps.setString(1, designid);
 		}
 		else {
-			ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2bl and decorid=?");
+			ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE designid=? and ldd2bl and decorid=?");
 			ps.setString(1, designid);
 			ps.setString(2, decorid);
 		}
@@ -537,7 +538,7 @@ public class PartMapping {
 		b = new Brick();
 		b.blID = blid;
 		// gets ldd part equivalence
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE blid=? and bl2ldd");
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE blid=? and bl2ldd");
 		ps.setString(1, blid);
 		pm = getPS(ps);
 		if (pm.size() > 1) {
@@ -554,7 +555,7 @@ public class PartMapping {
 			}
 		}
 		// get ldraw part equivalence
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE blid=? and bl2dat");
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE blid=? and bl2dat");
 		ps.setString(1, blid);
 		pm = getPS(ps);
 		if (pm.size() > 1) {
@@ -597,7 +598,7 @@ public class PartMapping {
 		b = new Brick();
 		b.ldrawID = ldr;
 		// gets ldd part equivalence
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE ldrawid=? and dat2ldd");
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE ldrawid=? and dat2ldd");
 		ps.setString(1, ldr);
 		pm = getPS(ps);
 		if (pm.size() > 1) {
@@ -614,7 +615,7 @@ public class PartMapping {
 			}
 		}
 		// get BL part equivalence
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE ldrawid=? and dat2bl");
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE ldrawid=? and dat2bl");
 		ps.setString(1, ldr);
 		pm = getPS(ps);
 		if (pm.size() > 1) {
@@ -652,7 +653,7 @@ public class PartMapping {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		st.execute("UPDATE "+table+" set name=CONCAT(name,' ##bldelete') " +
 				"WHERE blid != '' and blid NOT IN (SELECT blid from blparts WHERE NOT deleted)");
 		st.execute("UPDATE "+table+" set name=CONCAT(name,' ##ldrdelete') " +
@@ -667,7 +668,7 @@ public class PartMapping {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		// cleanup ##ldrawnew tag
 		st.execute("UPDATE "+table+" set name=REPLACE(name,'##ldrawnew')");
 		st.execute("UPDATE "+table+" set name=REPLACE(name,'##ldrdelete')");
@@ -685,7 +686,7 @@ public class PartMapping {
 		
 		if (ldd2bl) {
 			// it is a ldd to Bricklink mapping, must be unique
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT * FROM "+table+
 					" WHERE designid = '"+designid+"' " +
 							"AND " +
@@ -707,7 +708,7 @@ public class PartMapping {
 		}
 		if (ldd2dat) {
 			// it is a ldd to LDraw mapping, must be unique
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT * FROM "+table+
 					" WHERE designid = '"+designid+"' " +
 							"AND " +
@@ -729,7 +730,7 @@ public class PartMapping {
 		}
 		if (bl2ldd) {
 			// it is a BL to ldd mapping
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT * FROM "+table+
 					" WHERE blid = '"+blid+"' " +
 							"AND " +
@@ -751,7 +752,7 @@ public class PartMapping {
 		}
 		if (dat2ldd) {
 			// it is a LDraw to ldd mapping
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT * FROM "+table+
 					" WHERE ldrawid = '"+ldrawid+"' " +
 							"AND " +
@@ -773,7 +774,7 @@ public class PartMapping {
 		}
 		if (bl2dat) {
 			// it is a BL to ldraw mapping
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT * FROM "+table+
 					" WHERE blid = '"+blid+"' " +
 							"AND " +
@@ -793,7 +794,7 @@ public class PartMapping {
 		}
 		if (dat2bl) {
 			// it is a LDraw to bl mapping
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT * FROM "+table+
 					" WHERE ldrawid = '"+ldrawid+"' " +
 							"AND " +
@@ -825,7 +826,7 @@ public class PartMapping {
 		ResultSet rs;
 		
 		try {
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT COUNT(*) FROM " + table +
 					" WHERE ldd2bl OR ldd2dat OR bl2dat OR bl2ldd OR dat2bl OR dat2ldd");
 			rs.next();
@@ -868,7 +869,7 @@ public class PartMapping {
 		PreparedStatement ps;
 		ResultSet rs;
 		
-		ps = db.conn.prepareStatement("SELECT * FROM "+table+" where mapid=?");
+		ps = db.prepareStatement("SELECT * FROM "+table+" where mapid=?");
 		ps.setInt(1, mapid);
 		rs = ps.executeQuery();
 		if (rs.next()) {
