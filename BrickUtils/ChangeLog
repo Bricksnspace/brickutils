@@ -1,3 +1,14 @@
+2017-04-04  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/BrickDB.java: switched to DBConnector 
+	* src/brickUtils/PartMapping.java: switched to DBConnector
+	* src/brickUtils/brickUtils.java: switched to DBConnector
+	(initialize): Exception when sort set by time added, fixed
+	* src/brickUtils/BrickSet.java: switched to DBConnector
+	* src/brickUtils/Brick.java: switched to DBConnector
+	* src/brickUtils/BrickColor.java (check): switched to SQLException
+		changed to use DBConnector
+
 2017-04-03  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/brickUtils.java (firstRun): after downloading LDraw library didn't import it: fixed

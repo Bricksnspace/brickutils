@@ -31,24 +31,23 @@ package brickUtils;
 
 import java.sql.*;
 
+import bricksnspace.dbconnector.DBConnector;
+
 
 
 
 
 public class BrickDB {
 	
-	Connection conn;
+	DBConnector conn;
 	boolean inited = false;
 
 	
 	
-	public BrickDB(String dbname, String dbuser, String dboptions) throws Exception {
-		Class.forName("org.h2.Driver");
-	    this.conn = DriverManager.getConnection("jdbc:h2:"+dbname+
-	    		";FILE_LOCK=SOCKET;"+dboptions,dbuser, "");
-	    
+	public BrickDB(DBConnector dbc) throws Exception {
+
+		this.conn = dbc;
 	    inited = initDB();
-	    
 	}
 	
 	
@@ -88,7 +87,7 @@ public class BrickDB {
 //				BricklinkPart.createFTS();
 //				LDrawPart.setDb(this);
 //				LDrawPart.createFTS();
-				PartMapping.setDb(this);
+				PartMapping.setDb(conn);
 				PartMapping.createFTS();
 //				BricklinkSet.setDb(this);
 //				BricklinkSet.createFTS();
@@ -103,7 +102,7 @@ public class BrickDB {
 			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
 					"WHERE table='PARTMAPPING' LIMIT 1");
 			if (!rs.next()) { 
-				PartMapping.setDb(this);
+				PartMapping.setDb(conn);
 				PartMapping.createFTS();
 			}
 			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +

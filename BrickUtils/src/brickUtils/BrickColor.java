@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -36,6 +36,8 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.stream.events.StartElement;
 
+import bricksnspace.dbconnector.DBConnector;
+
 
 /* 
  * A brick "color" in LDD, BL and LDraw catalogs, with helpers for display 
@@ -61,7 +63,7 @@ public class BrickColor {
 
 	public static final String fieldsOrder = "ldd,bl,ldraw,r,g,b,a,inuse,metal,transparent,glitter,lddname,colgrp,notes,lastmod";
 	public static final String table = "colors";
-	private static BrickDB db;
+	private static DBConnector db;
 	private static PreparedStatement insertPS = null;
 	private static PreparedStatement updatePS = null;
 	private static PreparedStatement deletePS = null;
@@ -135,15 +137,15 @@ public class BrickColor {
 
 	
 	
-	public static void setDb(BrickDB bdb) throws SQLException {
+	public static void setDb(DBConnector bdb) throws SQLException {
 
 		db = bdb;
 		// prepared statements
-		insertPS = db.conn.prepareStatement("INSERT INTO "+table+" " +
+		insertPS = db.prepareStatement("INSERT INTO "+table+" " +
 				"("+fieldsOrder+") VALUES " +
 				"(?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW())" +
 				";",Statement.RETURN_GENERATED_KEYS);
-		updatePS = db.conn.prepareStatement("UPDATE "+table+" SET " +
+		updatePS = db.prepareStatement("UPDATE "+table+" SET " +
 				"ldd=?," +
 				"bl=?," +
 				"ldraw=?," +
@@ -160,7 +162,7 @@ public class BrickColor {
 				"notes=?," +
 				"lastmod=NOW() " +
 				"WHERE mapid=?");
-		deletePS = db.conn.prepareStatement("DELETE FROM "+table+" " +
+		deletePS = db.prepareStatement("DELETE FROM "+table+" " +
 				"WHERE mapid=?; COMMIT ");
 		colorMap = getAllColor();
 		
@@ -170,7 +172,7 @@ public class BrickColor {
 		
 		Statement st;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		st.execute("DROP TABLE IF EXISTS "+table+"; " +
 				"CREATE TABLE "+table+" (" +
 				"mapid INT PRIMARY KEY AUTO_INCREMENT," +
@@ -263,11 +265,11 @@ public class BrickColor {
 		ResultSet rs;
 		
 		if (filterExpr == null) {
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT mapid,"+fieldsOrder+" FROM "+table+"");
 		}
 		else {
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT mapid," + fieldsOrder +
 				" FROM "+table+" WHERE " + filterExpr);
 		}
@@ -344,13 +346,13 @@ public class BrickColor {
 	}
 	
 	
-	// FIXME: remove all references to BrickException
-	public void check() throws SQLException, IllegalStateException {
+
+	public void check() throws SQLException {
 		
 		Statement st;
 		ResultSet rs;
 		
-		st = db.conn.createStatement();
+		st = db.createStatement();
 		rs = st.executeQuery("SELECT mapid,"+fieldsOrder+" FROM "+table+" " +
 				"WHERE ((ldd = "+ldd+" AND "+ldd+"!=0) " +
 				"OR " +
@@ -363,7 +365,7 @@ public class BrickColor {
 			int lddid = rs.getInt("ldd");
 			int blid = rs.getInt("bl");
 			int ldrawid = rs.getInt("ldraw");
-			throw new IllegalStateException(
+			throw new SQLException(
 					"Duplicated color definition. Color:\n" +
 					"Ldd="+ldd+" Bl="+bl+" LDraw="+ldraw +"\n" +
 					"is already defined as:\n" +
@@ -401,7 +403,7 @@ public class BrickColor {
 		ResultSet rs;
 		Timestamp last[] = new Timestamp[5];
 		
-		ps = db.conn.prepareStatement("SELECT FORMATDATETIME(lastmod,'yyyy-MM-dd') as datemod "+
+		ps = db.prepareStatement("SELECT FORMATDATETIME(lastmod,'yyyy-MM-dd') as datemod "+
 				" FROM "+table+" GROUP BY datemod ORDER BY datemod DESC LIMIT 5");
 		rs = ps.executeQuery();
 		int i = 0;
@@ -418,7 +420,7 @@ public class BrickColor {
 	public static ArrayList<BrickColor> getModifiedAfter(Timestamp lastmodified) throws SQLException {
 		
 		PreparedStatement ps;
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+
 				" where lastmod>=?");
 		ps.setTimestamp(1, lastmodified);
 		return getPS(ps);
@@ -448,7 +450,7 @@ public class BrickColor {
 		PreparedStatement ps;
 		ArrayList<BrickColor> bc;
 		
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE bl=?");
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE bl=?");
 		ps.setInt(1,blcolor);
 		bc = getPS(ps);
 		if (bc.size() != 1) {
@@ -465,7 +467,7 @@ public class BrickColor {
 		PreparedStatement ps;
 		ArrayList<BrickColor> bc;
 		
-		ps = db.conn.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE ldraw=?");
+		ps = db.prepareStatement("SELECT mapid,"+fieldsOrder+" FROM "+table+" WHERE ldraw=?");
 		ps.setInt(1,ldrcolor);
 		bc = getPS(ps);
 		if (bc.size() != 1) {
@@ -507,7 +509,7 @@ public class BrickColor {
 		ResultSet rs;
 		
 		try {
-			st = db.conn.createStatement();
+			st = db.createStatement();
 			rs = st.executeQuery("SELECT COUNT(*) FROM " + table);
 			rs.next();
 			return rs.getInt(1);
@@ -551,7 +553,7 @@ public class BrickColor {
 		PreparedStatement ps;
 		ResultSet rs;
 		
-		ps = db.conn.prepareStatement("SELECT * FROM "+table+" where mapid=?");
+		ps = db.prepareStatement("SELECT * FROM "+table+" where mapid=?");
 		ps.setInt(1, mapid);
 		rs = ps.executeQuery();
 		if (rs.next()) {

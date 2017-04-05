@@ -43,9 +43,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -265,9 +267,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		protected Integer doInBackground() throws Exception {
 
 			setProgress(0);
-			brickDB = new BrickDB("brickutils","brickutils","IFEXISTS=TRUE");
-			setProgress(30);
 			dbc = new DBConnector("brickutils","brickutils","IFEXISTS=TRUE");
+			brickDB = new BrickDB(dbc);
+			setProgress(30);
 			BricklinkLib.Init(dbc);
 			setProgress(60);
 			// init LDraw part libraries
@@ -840,6 +842,17 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 		setTable.setAutoCreateRowSorter(true);
 		TableColumnModel tcs = setTable.getColumnModel();
 		TableRowSorter<SetTableModel> setSorter = new TableRowSorter<SetTableModel>(setTableModel);
+		Comparator<Timestamp> timeStampComparator = new Comparator<Timestamp>() {
+		    public int compare(Timestamp s1, Timestamp s2) {
+		    	if (s1.equals(s2))
+		    		return 0;
+		    	if (s1.before(s2))
+		    		return -1;
+		    	else 
+		    		return 1;
+		    }
+		};
+		setSorter.setComparator(9, timeStampComparator);
 		setTable.setRowSorter(setSorter);
 		tcs.getColumn(0).setPreferredWidth(50);
 		tcs.getColumn(3).setPreferredWidth(350);
@@ -943,11 +956,11 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			// place here all db setup in classes
 			try {
 						//"https://sourceforge.net/projects/brickutils/files/brickutils/updates/"));
-				PartMapping.setDb(brickDB);
+				PartMapping.setDb(dbc);
 				// LDrawPart.setDb(brickDB);
-				BrickColor.setDb(brickDB);
-				Brick.setDb(brickDB);
-				BrickSet.setDb(brickDB);
+				BrickColor.setDb(dbc);
+				Brick.setDb(dbc);
+				BrickSet.setDb(dbc);
 				currentSet = BrickSet.getCurrent();
 				if (AppSettings.getBool(MySettings.MAP_UPDATE)) {
 					checkUpdate(true);
@@ -1112,11 +1125,6 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	
 
 	private void closeApp() {
-		try {
-			brickDB.conn.close();
-		} catch (SQLException e1) {
-			Logger.getGlobal().log(Level.SEVERE,"Error closing connection with database",e1);
-		}
 		try {
 			AppSettings.savePreferences();
 		} catch (IOException | BackingStoreException e) {
