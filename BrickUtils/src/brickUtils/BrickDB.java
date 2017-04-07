@@ -39,121 +39,63 @@ import bricksnspace.dbconnector.DBConnector;
 
 public class BrickDB {
 	
-	DBConnector conn;
-	boolean inited = false;
+	protected static DBConnector db;
+	private static final String DBVERCONSTANT = "MPBUVERSION";
+	private static final int DBVERSION = 1;
 
 	
 	
-	public BrickDB(DBConnector dbc) throws Exception {
+	public BrickDB(DBConnector dbc) throws SQLException {
 
-		this.conn = dbc;
-	    inited = initDB();
-	}
-	
-	
-	/* 
-	 * init DB if it is a new one
-	 * return true if DB has been init-ed
-	 */
-	private boolean initDB() throws SQLException {
-		
-		Statement test;
-		ResultSet rs;
-		boolean inited = false;
-		
-		test = conn.createStatement();
-		rs = test.executeQuery("SHOW TABLES");
-		if (! rs.absolute(2)) {
-			// no tables in DB, it is new
-			initFTSearch();
-			//createPropertiesTable();
-			//PartMapping.createTable();
-			inited = true;
+		if (dbc == null)
+			throw new IllegalArgumentException("[BrickMapping] undefined DBConnector");
+		db = dbc;
+		// checks for new or already populated database
+		if (!db.checkTable(PartMapping.table)) {
+			createTables();
+			db.setDbVersion(DBVERCONSTANT, DBVERSION);
 		}
-		try {
-			createNewTables();
-			createIndexes();
-			try {
-				rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
-						"WHERE table='BLPARTS' LIMIT 1");
-				if (!rs.next()) { 
-//					BricklinkPart.setDb(this);
-//					BricklinkPart.createFTS();
+		else { 
+			// checks for database upgrade
+			if (db.needsUpgrade(DBVERCONSTANT, DBVERSION)) {
+				switch (db.getDbVersion(DBVERCONSTANT)) {
+				case -1:
+					upgradeFromMinus1();
+					break;
 				}
-			} catch (SQLException ex) {
-				// there is a problem with FT indexes, so rebuild all
-				test.executeQuery("CALL FTL_DROP_ALL()");
-//				BricklinkPart.setDb(this);
-//				BricklinkPart.createFTS();
-//				LDrawPart.setDb(this);
-//				LDrawPart.createFTS();
-				PartMapping.setDb(conn);
-				PartMapping.createFTS();
-//				BricklinkSet.setDb(this);
-//				BricklinkSet.createFTS();
-			
-			}
-//			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
-//					"WHERE table='LDRPARTS' LIMIT 1");
-//			if (!rs.next()) {
-//				LDrawPart.setDb(this);
-//				LDrawPart.createFTS();
-//			}
-			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
-					"WHERE table='PARTMAPPING' LIMIT 1");
-			if (!rs.next()) { 
-				PartMapping.setDb(conn);
-				PartMapping.createFTS();
-			}
-			rs = test.executeQuery("SELECT * FROM FTL_SEARCH_DATA('brick',0,0) " +
-					"WHERE table='BLSETS' LIMIT 1");
-			if (!rs.next()) { 
-//				BricklinkSet.setDb(this);
-//				BricklinkSet.createFTS();
 			}
 		}
-		catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return inited;
+		createIndexes();
 	}
 	
 	
-	public boolean isInited() {
-		return inited;
+	
+	/**
+	 * Contain all operation and queries to upgrade database tables and schema 
+	 * to current version
+	 * @throws SQLException
+	 */
+	private static void upgradeFromMinus1() throws SQLException {
+		
+		db.setDbVersion(DBVERCONSTANT, DBVERSION);
 	}
 
+	
+	
+	
 
-	private void initFTSearch() throws SQLException {
-		
-		Statement init;
-		
-		init = conn.createStatement();
-		init.execute("CREATE ALIAS IF NOT EXISTS FTL_INIT FOR \"org.h2.fulltext.FullTextLucene.init\";" +
-				"CALL FTL_INIT()");
-	}
-	
-	
-	
-	public void createNewTables() {
+	private void createTables() throws SQLException {
 
 		Statement st;
-		
-		
-		try {
-			st = conn.createStatement();
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-			return;
-		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS buproperties (name VARCHAR(32), value VARCHAR(255)); COMMIT");
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-			return;
-		}
+
+		st = db.createStatement();
+//		try {
+//			st.execute("CREATE TABLE IF NOT EXISTS buproperties (name VARCHAR(32), value VARCHAR(255)); COMMIT");
+//		} catch (SQLException e) {
+//			//  Blocco catch generato automaticamente
+//			e.printStackTrace();
+//			return;
+//		}
 		try {
 			st.execute("CREATE TABLE IF NOT EXISTS partmapping (" +
 					"mapid INT PRIMARY KEY AUTO_INCREMENT, " +
@@ -171,7 +113,7 @@ public class BrickDB {
 					"dat2bl BOOL," +
 					"lastmod TIMESTAMP); COMMIT ");
 		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
+			//  Blocco catch generato automaticamente
 			e.printStackTrace();
 			return;
 		}
@@ -230,7 +172,7 @@ public class BrickDB {
 					"lastmod TIMESTAMP" +
 					"); COMMIT ");
 		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
+			//  Blocco catch generato automaticamente
 			e.printStackTrace();
 			return;
 		}
@@ -241,7 +183,7 @@ public class BrickDB {
 //					"name VARCHAR(255)" +
 //					"); COMMIT ");
 //		} catch (SQLException e) {
-//			// TODO Blocco catch generato automaticamente
+//			//  Blocco catch generato automaticamente
 //			e.printStackTrace();
 //			return;
 //		}
@@ -369,7 +311,7 @@ public class BrickDB {
 	
 	private void createIndexes() throws SQLException {
 		
-		Statement st = conn.createStatement();
+		Statement st = db.createStatement();
 		// index for bricklink parts by blid
 //		st.executeUpdate("CREATE INDEX IF NOT EXISTS blp_blid ON "+BricklinkPart.table+"(blid)");
 //		st.executeUpdate("CREATE INDEX IF NOT EXISTS ldr_ldid ON "+LDrawPart.table+"(ldrid)");
@@ -384,7 +326,7 @@ public class BrickDB {
 
 	public void prepareForRelease() throws SQLException {
 		
-		Statement st = conn.createStatement(); 
+		Statement st = db.createStatement(); 
 		st.execute("ALTER TABLE "+Brick.workTable+" ALTER COLUMN ID RESTART WITH 1");
 		st.execute("ALTER TABLE "+BrickSet.setTable+" ALTER COLUMN ID RESTART WITH 1");
 		st.execute("ALTER TABLE "+BrickSet.brickTable+" ALTER COLUMN ID RESTART WITH 1");
@@ -392,11 +334,6 @@ public class BrickDB {
 	}
 
 	
-	public Statement getStatement() throws SQLException {
-		
-		return conn.createStatement();
-	}
-
 	
 }
 

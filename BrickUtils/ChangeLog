@@ -1,3 +1,7 @@
+2017-04-07  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/BrickDB.java: cleanup
+
 2017-04-04  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/BrickDB.java: switched to DBConnector 
