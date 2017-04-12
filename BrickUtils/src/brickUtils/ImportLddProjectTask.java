@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -37,6 +37,8 @@ import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
+
+import bricksnspace.brickMapping.BrickColor;
 
 
 /*
@@ -162,7 +164,7 @@ public class ImportLddProjectTask extends SwingWorker<Integer, Void> {
 					isBrick = false;
 					multipart = false;
 					i++;
-					b = PartMapping.getBrickByDesignId(designid, decoration);
+					b = Brick.brickByDesignId(designid, decoration);
 					b.color = color;
 					b.partNO = partNO;
 					b.quantity = quantity;

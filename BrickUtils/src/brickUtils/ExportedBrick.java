@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2015 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.binary.Base64;
 
+import bricksnspace.brickMapping.BrickColor;
 import bricksnspace.j3dgeom.Matrix3D;
 import bricksnspace.ldraw3d.LDRenderedPart;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
@@ -149,7 +150,7 @@ public class ExportedBrick {
 
 	public Color getColor() {
 		
-		return BrickColor.getColor(color).color;
+		return BrickColor.getColor(color).getColor();
 	}
 	
 	
@@ -170,20 +171,20 @@ public class ExportedBrick {
 	
 	public int getLddColor() {
 		
-		return BrickColor.getColor(color).ldd;
+		return BrickColor.getColor(color).getLdd();
 	}
 	
 	
 	public int getBlColor() {
 		
-		return BrickColor.getColor(color).bl;
+		return BrickColor.getColor(color).getBl();
 	}
 	
 	
 	
 	public int getLdrawColor() {
 		
-		return BrickColor.getColor(color).ldraw;
+		return BrickColor.getColor(color).getLdraw();
 	}
 	
 	
@@ -240,7 +241,7 @@ public class ExportedBrick {
 		brickShape.disableAutoRedraw();
 		brickShape.clearAllParts();
 		LDRenderedPart rendPart = LDRenderedPart.newRenderedPart(
-				LDPrimitive.newGlobalPart(ldrawID, BrickColor.getColor(color).ldraw, new Matrix3D()));
+				LDPrimitive.newGlobalPart(ldrawID, BrickColor.getColor(color).getLdraw(), new Matrix3D()));
 		double diagxz;
 		float angle = 20f;
 		if (rendPart.getSizeZ() > rendPart.getSizeX()) {

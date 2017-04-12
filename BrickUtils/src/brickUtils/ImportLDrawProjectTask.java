@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
 
+import bricksnspace.brickMapping.BrickColor;
 import bricksnspace.ldrawlib.LDPrimitive;
 import bricksnspace.ldrawlib.LDrawColor;
 import bricksnspace.ldrawlib.LDrawCommand;
@@ -40,10 +41,6 @@ import bricksnspace.ldrawlib.LDrawLib;
 import bricksnspace.ldrawlib.LDrawParser;
 import bricksnspace.ldrawlib.LDrawPart;
 import bricksnspace.ldrawlib.LDrawPartType;
-
-
-
-
 
 
 
@@ -120,7 +117,7 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 						ldpt == LDrawPartType.UNOFFICIAL ||
 						ldpt == LDrawPartType.SHORTCUT ||
 						ldpt == LDrawPartType.UNOFF_SHORTCUT) {
-					Brick b = PartMapping.getBrickByLdrId(pr.getLdrawId());
+					Brick b = Brick.brickByLdrId(pr.getLdrawId());
 					b.color = BrickColor.getMapByLdr(color);
 					b.quantity = 1;
 					b.tmpAdd();
@@ -180,7 +177,7 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 									ldpt == LDrawPartType.UNOFFICIAL ||
 									ldpt == LDrawPartType.SHORTCUT ||
 									ldpt == LDrawPartType.UNOFF_SHORTCUT) {
-								Brick b = PartMapping.getBrickByLdrId(pr.getLdrawId());
+								Brick b = Brick.brickByLdrId(pr.getLdrawId());
 								b.color = BrickColor.getMapByLdr(color);
 								b.quantity = 1;
 								b.tmpAdd();
@@ -212,7 +209,7 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 				case SHORTCUT:
 				case UNOFFICIAL:
 				case UNOFF_SHORTCUT:
-					Brick b = PartMapping.getBrickByLdrId(ldp.getLdrawId().toLowerCase());
+					Brick b = Brick.brickByLdrId(ldp.getLdrawId().toLowerCase());
 					b.color = BrickColor.getMapByLdr(ldp.getColorIndex());
 					b.quantity = 1;
 					b.tmpAdd();
@@ -227,7 +224,7 @@ public class ImportLDrawProjectTask extends SwingWorker<Integer, Void> {
 		case UNOFFICIAL:
 		case UNOFF_SHORTCUT:
 			// single part file, no expand needed
-			Brick b = PartMapping.getBrickByLdrId(mainModelName.toLowerCase());
+			Brick b = Brick.brickByLdrId(mainModelName.toLowerCase());
 			if (b != null) {
 				b.tmpAdd();
 			}

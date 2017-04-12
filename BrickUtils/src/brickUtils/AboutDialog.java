@@ -27,6 +27,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -41,6 +42,8 @@ import javax.swing.SwingConstants;
 
 import bricksnspace.appsettings.AppSettings;
 import bricksnspace.appsettings.AppVersion;
+import bricksnspace.brickMapping.BrickColor;
+import bricksnspace.brickMapping.PartMapping;
 
 
 
@@ -128,10 +131,10 @@ public class AboutDialog extends JDialog implements ActionListener {
 	    
 		body.add(new JSeparator(SwingConstants.HORIZONTAL));
 		
-		prog = new JLabel(PartMapping.getRules()+" part rules",SwingConstants.CENTER);
+		prog = new JLabel(PartMapping.countRules()+" part rules",SwingConstants.CENTER);
 		prog.setAlignmentX(Component.CENTER_ALIGNMENT);
 		body.add(prog);
-		prog = new JLabel(BrickColor.getRules()+" color rules",SwingConstants.CENTER);
+		prog = new JLabel(BrickColor.countRules()+" color rules",SwingConstants.CENTER);
 		prog.setAlignmentX(Component.CENTER_ALIGNMENT);
 		body.add(prog);
 		

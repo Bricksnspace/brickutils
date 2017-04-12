@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -41,6 +41,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import bricksnspace.brickMapping.BrickColor;
 import bricksnspace.bricklinklib.BricklinkColor;
 
 public class ColorChooseDialog extends JDialog implements ActionListener {
@@ -113,37 +114,37 @@ public class ColorChooseDialog extends JDialog implements ActionListener {
 				continue;
 			BrickColor b = BrickColor.getColor(i);
 			if (inProd) {
-				if (!b.inProduction) {
+				if (!b.isInProduction()) {
 					continue;
 				}
 			}
-			else if (b.bl == 0 || b.ldd == 0)
+			else if (b.getBl() == 0 || b.getLdd() == 0)
 				continue;
 			JRadioButton rb = new JRadioButton();
 			rb.setMinimumSize(new Dimension(50,25));
 			rb.setPreferredSize(new Dimension(50,25));
 			rb.addActionListener(this);
-			rb.setBackground(b.color);
+			rb.setBackground(b.getColor());
 			if (inProd)
-				rb.setToolTipText("Id:"+b.ldd+"("+b.lddName+") Bl:"+b.bl+"("+
-						BricklinkColor.getColor(b.bl).getName()+")");
+				rb.setToolTipText("Id:"+b.getLdd()+"("+b.getLddName()+") Bl:"+b.getBl()+"("+
+						BricklinkColor.getColor(b.getBl()).getName()+")");
 			else
-				rb.setToolTipText("Id:"+b.ldd+"("+b.lddName+") Bl:"+b.bl+"("+
-						BricklinkColor.getColor(b.bl).getName()+(b.inProduction? ")": ") (discontinued)"));
+				rb.setToolTipText("Id:"+b.getLdd()+"("+b.getLddName()+") Bl:"+b.getBl()+"("+
+						BricklinkColor.getColor(b.getBl()).getName()+(b.isInProduction()? ")": ") (discontinued)"));
 			rb.setActionCommand("color");
-			rb.setName(Integer.toString(b.mapid));
-			if (b.mapid == selected)
+			rb.setName(Integer.toString(b.getMapid()));
+			if (b.getMapid() == selected)
 				rb.setSelected(true);
 			buttons.put(i,rb);
 			buttonGroup.add(rb);
-			if (b.metallic) {
+			if (b.isMetallic()) {
 				metalPane.add(rb);
 			}
-			else if (b.transparent) {
+			else if (b.isTransparent()) {
 				transPane.add(rb);
 			}
 			else {
-				colGroupPane[b.colorGroup].add(rb);
+				colGroupPane[b.getColorGroup()].add(rb);
 			}
 		}
 		// transfer color group

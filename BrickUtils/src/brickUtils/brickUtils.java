@@ -96,6 +96,8 @@ import javax.xml.stream.XMLStreamWriter;
 import bricksnspace.appsettings.AppSettings;
 import bricksnspace.appsettings.AppVersion;
 import bricksnspace.appsettings.OptionsDialog;
+import bricksnspace.brickMapping.BrickMapping;
+import bricksnspace.brickMapping.PartMapping;
 import bricksnspace.bricklinklib.BLCategoryImporter;
 import bricksnspace.bricklinklib.BLPartImporter;
 import bricksnspace.bricklinklib.BLSetImporter;
@@ -166,7 +168,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	private static final String LDR_LIB_PATH = "complete.zip";
 	private static final String LDR_UNOFF_LIB_PATH = "ldrawunf.zip";
 	
-	private BrickDB brickDB;
+	//private BrickDB brickDB;
 	private DBConnector dbc;
 	private LDrawLib ldrlib;
 	private JFrame frame;
@@ -268,7 +270,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 
 			setProgress(0);
 			dbc = new DBConnector("brickutils","brickutils","IFEXISTS=TRUE");
-			brickDB = new BrickDB(dbc);
+			BrickDB.initDB(dbc);
 			setProgress(30);
 			BricklinkLib.Init(dbc);
 			setProgress(60);
@@ -956,9 +958,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			// place here all db setup in classes
 			try {
 						//"https://sourceforge.net/projects/brickutils/files/brickutils/updates/"));
-				PartMapping.setDb(dbc);
+				//PartMapping.setDb(dbc);
 				// LDrawPart.setDb(brickDB);
-				BrickColor.setDb(dbc);
+				BrickMapping.Init(dbc);
 				Brick.setDb(dbc);
 				BrickSet.setDb(dbc);
 				currentSet = BrickSet.getCurrent();
@@ -2216,9 +2218,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			if (pm == null)
 				return;
 			if (!lddSearchDlg.convertIds()) {
-				b = new Brick(pm.designid);
-				b.decorID = pm.decorid;
-				b.name = pm.name;
+				b = new Brick(pm.getDesignid());
+				b.decorID = pm.getDecorid();
+				b.name = pm.getName();
 				b.color = 1;
 				b.ldrawID = "";
 				b.blID = "";
@@ -2561,17 +2563,17 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 					
 				}
 				else {
-					workingTableModel.setValueAt(pm.designid,row ,2);
-					if (pm.masterid.length() > 0)
-						workingTableModel.setValueAt(pm.masterid,row ,1);
+					workingTableModel.setValueAt(pm.getDesignid(),row ,2);
+					if (pm.getMasterid().length() > 0)
+						workingTableModel.setValueAt(pm.getMasterid(),row ,1);
 					else
-						workingTableModel.setValueAt(pm.designid,row ,1);
-					workingTableModel.setValueAt(pm.decorid,row ,7);
+						workingTableModel.setValueAt(pm.getDesignid(),row ,1);
+					workingTableModel.setValueAt(pm.getDecorid(),row ,7);
 					if (workingTableModel.getValueAt(row,8).equals("") ||
 							((String)workingTableModel.getValueAt(row,8)).equals("##newpart")) 
 					{
 						// if description is empty or "##newpart" copy part description 
-						workingTableModel.setValueAt(pm.name, row,8);
+						workingTableModel.setValueAt(pm.getName(), row,8);
 					}
 				}
 				ListSelectionEvent l = new ListSelectionEvent(workingTable.getSelectionModel(), row, row, false);

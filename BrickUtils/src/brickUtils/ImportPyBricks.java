@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -35,6 +35,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.Characters;
 import javax.xml.stream.events.XMLEvent;
+
+import bricksnspace.brickMapping.BrickColor;
 
 
 /*
@@ -116,7 +118,7 @@ public class ImportPyBricks extends SwingWorker<Integer, Void> {
 				tag = e.asEndElement().getName().getLocalPart();
 				if (tag == "brick" && isItem) {
 					isItem = false;
-					b = PartMapping.getBrickByDesignId(lddid,null);
+					b = Brick.brickByDesignId(lddid,null);
 					b.id = id;
 					b.quantity = qty;
 					b.color = BrickColor.getMapByLdd(color);

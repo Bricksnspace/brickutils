@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2016 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -459,7 +459,7 @@ public class BlSearch extends JDialog implements ActionListener, ListSelectionLi
 		brickShape.setBlid(blid);
 		if (autoConvert.isSelected()) {
 			try {
-				convertedBrick = PartMapping.getBrickByBlinkId(blid);
+				convertedBrick = Brick.brickByBlinkId(blid);
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(this, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);

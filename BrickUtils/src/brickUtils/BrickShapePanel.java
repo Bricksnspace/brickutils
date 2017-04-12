@@ -36,6 +36,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import bricksnspace.brickMapping.BrickColor;
 import bricksnspace.j3dgeom.Matrix3D;
 import bricksnspace.ldraw3d.LDRenderedPart;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
@@ -204,7 +205,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 	
 	public void setColor(int colorid) {
 		
-		currentColor = BrickColor.getColor(colorid).ldraw;
+		currentColor = BrickColor.getColor(colorid).getLdraw();
 	}
 	
 	
@@ -230,7 +231,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 		if (brickShape == null)
 			return;
 		try {
-			b = PartMapping.getBrickByBlinkId(blid);
+			b = Brick.brickByBlinkId(blid);
 			currentPart = b.ldrawID;
 		} catch (SQLException e) {
 			currentPart = "";
@@ -254,7 +255,7 @@ public class BrickShapePanel extends JPanel implements ActionListener {
 		if (brickShape == null)
 			return;
 		try {
-			b = PartMapping.getBrickByDesignId(designid,decorid);
+			b = Brick.brickByDesignId(designid,decorid);
 			currentPart = b.ldrawID;
 		} catch (SQLException e) {
 			currentPart = "";

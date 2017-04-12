@@ -1,3 +1,23 @@
+2017-04-12  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/LdrSearch.java: 
+	* src/brickUtils/LddTableModel.java: 
+	* src/brickUtils/LddSearch.java: 
+	* src/brickUtils/ImportPyBricks.java: 
+	* src/brickUtils/ImportLDrawProjectTask.java: 
+	* src/brickUtils/ImportLddProjectTask.java: 
+	* src/brickUtils/ImportBlXMLTask.java: 
+	* src/brickUtils/HtmlExportTask.java: 
+	* src/brickUtils/ExportedBrick.java: 
+	* src/brickUtils/ColorChooseDialog.java: 
+	* src/brickUtils/CheckUpdate.java: 
+	* src/brickUtils/BrickShapePanel.java: 
+	* src/brickUtils/BrickDB.java: 
+	* src/brickUtils/BrickColorCellRenderer.java: 
+	* src/brickUtils/Brick.java: 
+	* src/brickUtils/BlSearch.java: 
+	* src/brickUtils/AboutDialog.java: all changed to BrickMapping library
+	
 2017-04-07  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/BrickDB.java: cleanup

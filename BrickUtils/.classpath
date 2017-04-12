@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry excluding="dbMaint/LdrLibDiff.java|brickUtils/LDrawLib.java|brickUtils/BricklinkColor.java|brickUtils/BlCategory.java|brickUtils/ImportBlCategoryTask.java|brickUtils/BricklinkSet.java|brickUtils/BricklinkPart.java|brickUtils/ImportBlSetsTask.java|brickUtils/ImportBlPartsTask.java|brickUtils/BlTableModel.java|brickUtils/BlSetTableModel.java|brickUtils/AppPref.java|brickUtils/ProgProps.java|brickUtils/CheckUpdates.java|brickUtils/OptionsDialog.java|brickUtils/BrickShapeGLView.java|brickUtils/ImportLdrawPartsTask.java|brickUtils/BrickException.java|brickUtils/LDrawPart.java|brickUtils/BusyDialog.java" kind="src" path="src"/>
+	<classpathentry excluding="dbMaint/LdrLibDiff.java|brickUtils/LDrawLib.java|brickUtils/BricklinkColor.java|brickUtils/BlCategory.java|brickUtils/ImportBlCategoryTask.java|brickUtils/BricklinkSet.java|brickUtils/BricklinkPart.java|brickUtils/ImportBlSetsTask.java|brickUtils/ImportBlPartsTask.java|brickUtils/BlTableModel.java|brickUtils/BlSetTableModel.java|brickUtils/AppPref.java|brickUtils/ProgProps.java|brickUtils/CheckUpdates.java|brickUtils/OptionsDialog.java|brickUtils/BrickShapeGLView.java|brickUtils/ImportLdrawPartsTask.java|brickUtils/BrickException.java|brickUtils/LDrawPart.java|brickUtils/BusyDialog.java|brickUtils/BrickColor.java|brickUtils/PartMapping.java" kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/LDrawLib"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/BricklinkLib"/>
@@ -12,5 +12,6 @@
 	<classpathentry exported="true" kind="lib" path="apache-commons-collections.jar"/>
 	<classpathentry exported="true" kind="lib" path="apache-commons-lang.jar"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/BusyDialog"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/BrickMapping"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -18,7 +18,11 @@
 */
 
 
+
 package brickUtils;
+
+
+
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -34,7 +38,6 @@ import java.sql.Statement;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-
 import javax.imageio.ImageIO;
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLOutputFactory;
@@ -44,11 +47,16 @@ import javax.xml.stream.events.StartElement;
 
 import org.apache.commons.codec.binary.Base64;
 
+import bricksnspace.brickMapping.BrickColor;
+import bricksnspace.brickMapping.PartMapping;
+import bricksnspace.bricklinklib.BricklinkPart;
 import bricksnspace.dbconnector.DBConnector;
 import bricksnspace.j3dgeom.Matrix3D;
 import bricksnspace.ldraw3d.LDRenderedPart;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
 import bricksnspace.ldrawlib.LDPrimitive;
+import bricksnspace.ldrawlib.LDrawLibDB;
+import bricksnspace.ldrawlib.LDrawPart;
 
 
 public class Brick {
@@ -229,7 +237,121 @@ public class Brick {
     	matchid = 0;
     }
 
+    
+    
+	public static Brick brickByBlinkId(String blid) throws SQLException {
+		
+		Brick b = new Brick();
+		b.blID = blid;
+		// gets ldd part equivalence
+		PartMapping pm = PartMapping.blinkToLdd(blid);
+		b.designID = pm.getDesignid();
+		b.decorID = pm.getDecorid();
+		if (pm.getMasterid() != "") {
+			b.masterID = pm.getMasterid();
+		}
+		else {
+			b.masterID = b.designID;
+		}
+		// get ldraw part equivalence
+		pm = PartMapping.blinkToLDraw(blid);
+		b.ldrawID = pm.getLdrawid();
+		if (b.masterID == "" && pm.getMasterid() != "") {
+			b.masterID = pm.getMasterid();
+		}
+		// name from Bricklink
+		BricklinkPart blp = BricklinkPart.getById(b.blID);
+		if (blp == null) {
+			// Problem: your BL part are outdate
+			b.name = "Problem: part not found in BL DB. Needs an update, maybe?";
+		}
+		else if (blp.isDeleted()) {
+			// this is a deleted part!
+			b.name = "Problem: this is a deleted part in BLink. You have an old dump?";
+		}
+		else {  
+			b.name = blp.getName();
+		}
+		return b;
+	}
 
+	
+	
+
+	public static Brick brickByLdrId(String ldr) throws SQLException {
+		
+		Brick b = new Brick();
+		b.ldrawID = ldr;
+		// gets ldd part equivalence
+		PartMapping pm = PartMapping.ldrawToLdd(ldr);
+		b.designID = pm.getDesignid();
+		b.decorID = pm.getDecorid();
+		if (pm.getMasterid() != "") {
+			b.masterID = pm.getMasterid();
+		}
+		else {
+			b.masterID = b.designID;
+		}
+		// get BL part equivalence
+		pm = PartMapping.ldrawToBlink(ldr);
+		b.blID = pm.getBlid();
+		if (b.masterID == "" && pm.getMasterid() != "") {
+			b.masterID = pm.getMasterid();
+		}
+		// name from blparts or ldrparts
+		LDrawPart ldrp = LDrawLibDB.getPart(b.ldrawID);
+		if (ldrp == null) {
+			// Problem: your LDraw library are outdated
+			b.name = "Problem: part not found in LDraw part Library. Needs an update, maybe?";
+		}
+		else {
+			b.name = ldrp.getDescription();
+		}
+		return b;
+	}
+
+	
+	
+	
+	public static Brick brickByDesignId(String designid, String decorid) throws SQLException {
+		
+		Brick b = new Brick(designid);
+		if (decorid != null && decorid.length() > 0) {
+			b.decorID = decorid;
+		}
+		PartMapping pm = PartMapping.lddToLDraw(designid, decorid);
+		b.ldrawID = pm.getLdrawid();
+		if (pm.getMasterid() != "") {
+			b.masterID = pm.getMasterid();
+		}
+		// get bl part equivalence
+		pm = PartMapping.lddToBlink(designid, decorid);
+		b.blID = pm.getBlid();
+		if (pm.getMasterid() != "") {
+			b.masterID = pm.getMasterid();
+		}
+		// name from blparts or ldrparts
+		if (b.blID != "") {
+			BricklinkPart blp = BricklinkPart.getById(b.blID);
+			if (blp == null) {
+				// gets name from ldrpart, if any
+				if (b.ldrawID != "") {
+					LDrawPart ldrp = LDrawLibDB.getPart(b.ldrawID);
+					if (ldrp != null) {
+						b.name = ldrp.getDescription();
+					}
+				}
+			}
+			else {  // if blp.size() == 1
+				b.name = blp.getName();
+			}
+		}
+		return b;
+	}
+
+	
+	
+    
 
 	@Override
 	public String toString() {
@@ -409,7 +531,7 @@ public class Brick {
 
 	public Color getColor() {
 		
-		return BrickColor.getColor(color).color;
+		return BrickColor.getColor(color).getColor();
 	}
 	
 	
@@ -430,20 +552,20 @@ public class Brick {
 	
 	public int getLddColor() {
 		
-		return BrickColor.getColor(color).ldd;
+		return BrickColor.getColor(color).getLdd();
 	}
 	
 	
 	public int getBlColor() {
 		
-		return BrickColor.getColor(color).bl;
+		return BrickColor.getColor(color).getBl();
 	}
 	
 	
 	
 	public int getLdrawColor() {
 		
-		return BrickColor.getColor(color).ldraw;
+		return BrickColor.getColor(color).getLdraw();
 	}
 	
 	
@@ -1267,7 +1389,7 @@ public class Brick {
 			idx++;
 		}
 		else if(colormode == COLOR_NEAR) {
-			ps.setInt(idx, BrickColor.getColor(b.color).colorGroup);
+			ps.setInt(idx, BrickColor.getColor(b.color).getColorGroup());
 			idx++;
 		}
 		//System.out.println(query);
@@ -1313,7 +1435,7 @@ public class Brick {
 		brickShape.disableAutoRedraw();
 		brickShape.clearAllParts();
 		LDRenderedPart rendPart = LDRenderedPart.newRenderedPart(
-				LDPrimitive.newGlobalPart(ldrawID, BrickColor.getColor(color).ldraw, new Matrix3D()));
+				LDPrimitive.newGlobalPart(ldrawID, BrickColor.getColor(color).getLdraw(), new Matrix3D()));
 		double diagxz;
 		float angle = 20f;
 		if (rendPart.getSizeZ() > rendPart.getSizeX()) {
@@ -1389,7 +1511,7 @@ public class Brick {
 		xsw.writeEndElement();
 		xsw.writeCharacters("\n");
 		xsw.writeStartElement("COLOR");
-		xsw.writeCharacters(Integer.toString(BrickColor.getColor(color).bl));
+		xsw.writeCharacters(Integer.toString(BrickColor.getColor(color).getBl()));
 		xsw.writeEndElement();
 		xsw.writeCharacters("\n");
         if (blQty) {

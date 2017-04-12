@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -43,15 +43,17 @@ public class BrickDB {
 	private static final String DBVERCONSTANT = "MPBUVERSION";
 	private static final int DBVERSION = 1;
 
+	private BrickDB() {
+		
+	}
 	
-	
-	public BrickDB(DBConnector dbc) throws SQLException {
+	public static void initDB(DBConnector dbc) throws SQLException {
 
 		if (dbc == null)
 			throw new IllegalArgumentException("[BrickMapping] undefined DBConnector");
 		db = dbc;
 		// checks for new or already populated database
-		if (!db.checkTable(PartMapping.table)) {
+		if (!db.checkTable(Brick.workTable)) {
 			createTables();
 			db.setDbVersion(DBVERCONSTANT, DBVERSION);
 		}
@@ -65,6 +67,22 @@ public class BrickDB {
 				}
 			}
 		}
+		Statement st = db.createStatement();
+		st.execute("CREATE TEMP TABLE IF NOT EXISTS "+Brick.tmpTable+" (" +
+				"id INT PRIMARY KEY AUTO_INCREMENT," +
+				"masterid VARCHAR(64)," +	// the brick "family" ID 
+				"designid VARCHAR(64)," +	// LDD design ID
+				"partno VARCHAR(64)," +		// LEGO® part ID
+				"name VARCHAR(255)," +		// brick name from BL
+				"blID VARCHAR(64)," +		// BrickLink ID
+				"ldrawID VARCHAR(64)," +	// LDraw catalog ID
+				"color INT," +				// color index
+				"decorID VARCHAR(64)," +
+				"quantity INT," +			// brick quantity
+				"extra BOOL," +				// it is an extra part
+				"alt BOOL," +				// it is an alternate part
+				"matchid INT" +				// match for alternate part
+				"); COMMIT ");
 		createIndexes();
 	}
 	
@@ -84,11 +102,9 @@ public class BrickDB {
 	
 	
 
-	private void createTables() throws SQLException {
+	private static void createTables() throws SQLException {
 
-		Statement st;
-
-		st = db.createStatement();
+		Statement st = db.createStatement();
 //		try {
 //			st.execute("CREATE TABLE IF NOT EXISTS buproperties (name VARCHAR(32), value VARCHAR(255)); COMMIT");
 //		} catch (SQLException e) {
@@ -96,27 +112,27 @@ public class BrickDB {
 //			e.printStackTrace();
 //			return;
 //		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS partmapping (" +
-					"mapid INT PRIMARY KEY AUTO_INCREMENT, " +
-					"masterid VARCHAR(64)," +
-					"designid VARCHAR(64)," +
-					"decorid VARCHAR(64)," +
-					"blid VARCHAR(64)," +
-					"ldrawid VARCHAR(64)," +
-					"name VARCHAR(255)," +
-					"ldd2bl BOOL," +
-					"bl2ldd BOOL," +
-					"ldd2dat BOOL," +
-					"dat2ldd BOOL," +
-					"bl2dat BOOL," +
-					"dat2bl BOOL," +
-					"lastmod TIMESTAMP); COMMIT ");
-		} catch (SQLException e) {
-			//  Blocco catch generato automaticamente
-			e.printStackTrace();
-			return;
-		}
+//		try {
+//			st.execute("CREATE TABLE IF NOT EXISTS partmapping (" +
+//					"mapid INT PRIMARY KEY AUTO_INCREMENT, " +
+//					"masterid VARCHAR(64)," +
+//					"designid VARCHAR(64)," +
+//					"decorid VARCHAR(64)," +
+//					"blid VARCHAR(64)," +
+//					"ldrawid VARCHAR(64)," +
+//					"name VARCHAR(255)," +
+//					"ldd2bl BOOL," +
+//					"bl2ldd BOOL," +
+//					"ldd2dat BOOL," +
+//					"dat2ldd BOOL," +
+//					"bl2dat BOOL," +
+//					"dat2bl BOOL," +
+//					"lastmod TIMESTAMP); COMMIT ");
+//		} catch (SQLException e) {
+//			//  Blocco catch generato automaticamente
+//			e.printStackTrace();
+//			return;
+//		}
 //		try {
 //			st.execute("CREATE TABLE IF NOT EXISTS blparts (" +
 //					"id INT PRIMARY KEY AUTO_INCREMENT, " +
@@ -152,31 +168,31 @@ public class BrickDB {
 //			e.printStackTrace();
 //			return;
 //		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS colors (" +
-					"mapid INT PRIMARY KEY AUTO_INCREMENT," +
-					"ldd INT UNIQUE, " +
-					"bl INT," +
-					"ldraw INT," +
-					"r INT," +
-					"g INT," +
-					"b INT," +
-					"a INT," +
-					"inuse BOOL," +
-					"metal BOOL," +
-					"transparent BOOL," +
-					"glitter BOOL," +
-					"lddname VARCHAR(255)," +
-					"colgrp VARCHAR(64)," +
-					"notes VARCHAR(255)," +
-					"lastmod TIMESTAMP" +
-					"); COMMIT ");
-		} catch (SQLException e) {
-			//  Blocco catch generato automaticamente
-			e.printStackTrace();
-			return;
-		}
 //		try {
+//			st.execute("CREATE TABLE IF NOT EXISTS colors (" +
+//					"mapid INT PRIMARY KEY AUTO_INCREMENT," +
+//					"ldd INT UNIQUE, " +
+//					"bl INT," +
+//					"ldraw INT," +
+//					"r INT," +
+//					"g INT," +
+//					"b INT," +
+//					"a INT," +
+//					"inuse BOOL," +
+//					"metal BOOL," +
+//					"transparent BOOL," +
+//					"glitter BOOL," +
+//					"lddname VARCHAR(255)," +
+//					"colgrp VARCHAR(64)," +
+//					"notes VARCHAR(255)," +
+//					"lastmod TIMESTAMP" +
+//					"); COMMIT ");
+//		} catch (SQLException e) {
+//			//  Blocco catch generato automaticamente
+//			e.printStackTrace();
+//			return;
+//		}
+////		try {
 //			st.execute("CREATE TABLE IF NOT EXISTS blcategories (" +
 //					"id INT PRIMARY KEY AUTO_INCREMENT," +
 //					"catid INT UNIQUE, " +
@@ -201,46 +217,21 @@ public class BrickDB {
 //			e.printStackTrace();
 //			return;
 //		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS "+Brick.workTable+" (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT," +
-					"masterid VARCHAR(64)," +	// the brick "family" ID 
-					"designid VARCHAR(64)," +	// LDD design ID
-					"partno VARCHAR(64)," +		// LEGO® part ID
-					"name VARCHAR(255)," +		// brick name from BL
-					"blID VARCHAR(64)," +		// BrickLink ID
-					"ldrawID VARCHAR(64)," +	// LDraw catalog ID
-					"color INT," +				// color index
-					"decorID VARCHAR(64)," +
-					"quantity INT," +			// brick quantity
-					"extra BOOL," +				// it is an extra part
-					"alt BOOL," +				// it is an alternate part
-					"matchid INT" +				// match for alternate part
-					"); COMMIT ");
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-		}
-		try {
-			st.execute("CREATE TEMP TABLE IF NOT EXISTS "+Brick.tmpTable+" (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT," +
-					"masterid VARCHAR(64)," +	// the brick "family" ID 
-					"designid VARCHAR(64)," +	// LDD design ID
-					"partno VARCHAR(64)," +		// LEGO® part ID
-					"name VARCHAR(255)," +		// brick name from BL
-					"blID VARCHAR(64)," +		// BrickLink ID
-					"ldrawID VARCHAR(64)," +	// LDraw catalog ID
-					"color INT," +				// color index
-					"decorID VARCHAR(64)," +
-					"quantity INT," +			// brick quantity
-					"extra BOOL," +				// it is an extra part
-					"alt BOOL," +				// it is an alternate part
-					"matchid INT" +				// match for alternate part
-					"); COMMIT ");
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-		}
+		st.execute("CREATE TABLE IF NOT EXISTS "+Brick.workTable+" (" +
+				"id INT PRIMARY KEY AUTO_INCREMENT," +
+				"masterid VARCHAR(64)," +	// the brick "family" ID 
+				"designid VARCHAR(64)," +	// LDD design ID
+				"partno VARCHAR(64)," +		// LEGO® part ID
+				"name VARCHAR(255)," +		// brick name from BL
+				"blID VARCHAR(64)," +		// BrickLink ID
+				"ldrawID VARCHAR(64)," +	// LDraw catalog ID
+				"color INT," +				// color index
+				"decorID VARCHAR(64)," +
+				"quantity INT," +			// brick quantity
+				"extra BOOL," +				// it is an extra part
+				"alt BOOL," +				// it is an alternate part
+				"matchid INT" +				// match for alternate part
+				"); COMMIT ");
 //		try {
 ////			st.execute("CREATE TABLE IF NOT EXISTS "+BricklinkColor.table+" (" +
 ////					"id INT PRIMARY KEY AUTO_INCREMENT," +
@@ -255,76 +246,60 @@ public class BrickDB {
 //			// 
 //			e.printStackTrace();
 //		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS "+BrickSet.setTable+" (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT," +
-					"setid VARCHAR(64)," +
-					"type INT," +
-					"name VARCHAR(255)," +
-					"category VARCHAR(255)," +
-					"year INT," +
-					"catid INT," +
-					"notes VARCHAR(255)," +
-					"available BOOL," +
-					"selected BOOL," +
-					"lastmod TIMESTAMP" +
-					"); COMMIT ");
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS "+BrickSet.brickTable+" (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT," +
-					"setid INT," +
-					"brickid INT," +
-					"quantity INT" +
-					"); COMMIT ");
-		} catch (SQLException e1) {
-			// TODO Blocco catch generato automaticamente
-			e1.printStackTrace();
-		}
-		try {
-			st.execute("CREATE TABLE IF NOT EXISTS "+Brick.catalogTable+" (" +
-					"id INT PRIMARY KEY AUTO_INCREMENT," +
-					"masterid VARCHAR(64)," +	// the brick "family" ID 
-					"designid VARCHAR(64)," +	// LDD design ID
-					"partno VARCHAR(64)," +		// LEGO® part ID
-					"name VARCHAR(255)," +		// brick name from BL
-					"blID VARCHAR(64)," +		// BrickLink ID
-					"ldrawID VARCHAR(64)," +	// LDraw catalog ID
-					"color INT," +				// color index
-					"decorID VARCHAR(64)," +
-					"quantity INT," +			// brick quantity
-					"extra BOOL," +				// it is an extra part
-					"alt BOOL," +				// it is an alternate part
-					"matchid INT" +				// match for alternate part
-					"); COMMIT ");
-		} catch (SQLException e) {
-			// TODO Blocco catch generato automaticamente
-			e.printStackTrace();
-		}
-
+		st.execute("CREATE TABLE IF NOT EXISTS "+BrickSet.setTable+" (" +
+				"id INT PRIMARY KEY AUTO_INCREMENT," +
+				"setid VARCHAR(64)," +
+				"type INT," +
+				"name VARCHAR(255)," +
+				"category VARCHAR(255)," +
+				"year INT," +
+				"catid INT," +
+				"notes VARCHAR(255)," +
+				"available BOOL," +
+				"selected BOOL," +
+				"lastmod TIMESTAMP" +
+				"); COMMIT ");
+		st.execute("CREATE TABLE IF NOT EXISTS "+BrickSet.brickTable+" (" +
+				"id INT PRIMARY KEY AUTO_INCREMENT," +
+				"setid INT," +
+				"brickid INT," +
+				"quantity INT" +
+				"); COMMIT ");
+		st.execute("CREATE TABLE IF NOT EXISTS "+Brick.catalogTable+" (" +
+				"id INT PRIMARY KEY AUTO_INCREMENT," +
+				"masterid VARCHAR(64)," +	// the brick "family" ID 
+				"designid VARCHAR(64)," +	// LDD design ID
+				"partno VARCHAR(64)," +		// LEGO® part ID
+				"name VARCHAR(255)," +		// brick name from BL
+				"blID VARCHAR(64)," +		// BrickLink ID
+				"ldrawID VARCHAR(64)," +	// LDraw catalog ID
+				"color INT," +				// color index
+				"decorID VARCHAR(64)," +
+				"quantity INT," +			// brick quantity
+				"extra BOOL," +				// it is an extra part
+				"alt BOOL," +				// it is an alternate part
+				"matchid INT" +				// match for alternate part
+				"); COMMIT ");
 	}
 	
 	
 	
-	private void createIndexes() throws SQLException {
+	private static void createIndexes() throws SQLException {
 		
-		Statement st = db.createStatement();
+//		Statement st = db.createStatement();
 		// index for bricklink parts by blid
 //		st.executeUpdate("CREATE INDEX IF NOT EXISTS blp_blid ON "+BricklinkPart.table+"(blid)");
 //		st.executeUpdate("CREATE INDEX IF NOT EXISTS ldr_ldid ON "+LDrawPart.table+"(ldrid)");
-		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_mapid ON "+PartMapping.table+"(mapid)");
-		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_lddid ON "+PartMapping.table+"(designid)");
-		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_masterid ON "+PartMapping.table+"(masterid)");
-		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_blid ON "+PartMapping.table+"(blid)");
-		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_ldrawid ON "+PartMapping.table+"(ldrawid)");
+//		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_mapid ON "+PartMapping.table+"(mapid)");
+//		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_lddid ON "+PartMapping.table+"(designid)");
+//		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_masterid ON "+PartMapping.table+"(masterid)");
+//		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_blid ON "+PartMapping.table+"(blid)");
+//		st.executeUpdate("CREATE INDEX IF NOT EXISTS pm_ldrawid ON "+PartMapping.table+"(ldrawid)");
 	}
 	
 	
 
-	public void prepareForRelease() throws SQLException {
+	public static void prepareForRelease() throws SQLException {
 		
 		Statement st = db.createStatement(); 
 		st.execute("ALTER TABLE "+Brick.workTable+" ALTER COLUMN ID RESTART WITH 1");

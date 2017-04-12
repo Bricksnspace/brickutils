@@ -420,7 +420,7 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 		brickShape.setLdrawid(ldrid);
 		if (autoConvert.isSelected()) {
 			try {
-				convertedBrick = PartMapping.getBrickByLdrId(ldrid);
+				convertedBrick = Brick.brickByLdrId(ldrid);
 			} catch (SQLException e) {
 				JOptionPane.showMessageDialog(this, "Problem with database.\nReason: "+
 						e.getLocalizedMessage(), "Database error",JOptionPane.ERROR_MESSAGE);

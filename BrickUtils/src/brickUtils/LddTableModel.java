@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -22,6 +22,8 @@ package brickUtils;
 import java.util.ArrayList;
 
 import javax.swing.table.AbstractTableModel;
+
+import bricksnspace.brickMapping.PartMapping;
 
 /*
  * table model to display LDD part search results
@@ -100,19 +102,19 @@ public class LddTableModel extends AbstractTableModel {
 		//id,blid,name,catid
 		switch (arg1) {
 		case 0:
-			return parts.get(arg0).mapid;
+			return parts.get(arg0).getMapid();
 		case 1:
-			return parts.get(arg0).masterid;
+			return parts.get(arg0).getMasterid();
 		case 2:
-			return parts.get(arg0).designid;
+			return parts.get(arg0).getDesignid();
 		case 3:
-			return parts.get(arg0).decorid;
+			return parts.get(arg0).getDecorid();
 		case 4:
-			return parts.get(arg0).blid;
+			return parts.get(arg0).getBlid();
 		case 5:
-			return parts.get(arg0).name;
+			return parts.get(arg0).getName();
 		case 6:
-			return parts.get(arg0).lastmod;
+			return parts.get(arg0).getLastmod();
 		}
 		return null;
 	}

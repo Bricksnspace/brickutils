@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ import javax.swing.JTable;
 import javax.swing.border.Border;
 import javax.swing.table.TableCellRenderer;
 
+import bricksnspace.brickMapping.BrickColor;
 import bricksnspace.bricklinklib.BricklinkColor;
 
 public class BrickColorCellRenderer extends JLabel implements TableCellRenderer {
@@ -50,7 +51,7 @@ public class BrickColorCellRenderer extends JLabel implements TableCellRenderer 
                             int row, int column) {
         @SuppressWarnings("boxing")
 		BrickColor bc = BrickColor.getColor((Integer) mapid);
-        setBackground(bc.color);
+        setBackground(bc.getColor());
         if (isBordered) {
             if (isSelected) {
                 if (selectedBorder == null) {
@@ -67,8 +68,8 @@ public class BrickColorCellRenderer extends JLabel implements TableCellRenderer 
             }
         }
         
-        setToolTipText("Id:"+bc.ldd+"("+bc.lddName+") Bl:"+bc.bl+"("+
-				BricklinkColor.getColor(bc.bl).getName()+(bc.inProduction? ")": ") (discontinued)"));
+        setToolTipText("Id:"+bc.getLdd()+"("+bc.getLddName()+") Bl:"+bc.getBl()+"("+
+				BricklinkColor.getColor(bc.getBl()).getName()+(bc.isInProduction()? ")": ") (discontinued)"));
         return this;
     }
 

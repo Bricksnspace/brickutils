@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -30,6 +30,7 @@ import java.util.ArrayList;
 
 import javax.swing.SwingWorker;
 
+import bricksnspace.brickMapping.BrickColor;
 import bricksnspace.ldraw3d.LDrawGLDisplay;
 
 
@@ -113,12 +114,12 @@ public class HtmlExportTask extends SwingWorker<Integer, Void> {
             		b.id,b.designID,b.blID,b.ldrawID));
             		/* color sub-table with ldd color id, color sample, ldd color name */
             fw.write(String.format("<table width='100%%' class='color'><tr><td width='20%%' class='color'>%d</td>",
-            		BrickColor.getColor(b.color).ldd));
+            		BrickColor.getColor(b.color).getLdd()));
             fw.write(String.format("<td class='color'><div style='display:inline;border-style:solid;border-width:0 1em 0 1em;border-color:%s'/></td>",
             		/* color in HTML notation #rrggbb */
             		b.getHtmlColor()));
             fw.write(String.format("<td class='color'>%s</td></tr><tr><td colspan='3' class='decor'>%s</td></tr></table></td>",
-            		BrickColor.getColor(b.color).lddName,b.isDecorated()?"Decorated":""));
+            		BrickColor.getColor(b.color).getLddName(),b.isDecorated()?"Decorated":""));
             fw.write(String.format("<td>%d</td>",b.quantity));
             String image64 = "";
             if (Brick.isHtmImage()) {

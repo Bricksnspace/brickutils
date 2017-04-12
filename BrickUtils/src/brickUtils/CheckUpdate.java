@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -36,6 +36,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.XMLEvent;
 
+import bricksnspace.brickMapping.BrickColor;
+import bricksnspace.brickMapping.PartMapping;
 import bricksnspace.busydialog.BusyDialog;
 
 
