@@ -43,6 +43,7 @@ import javax.swing.JTextField;
 
 import bricksnspace.ldrawlib.LDrawLib;
 import bricksnspace.ldrawlib.LDrawPart;
+import bricksnspace.ldrawlib.LdrTableModel;
 
 import java.awt.Dimension;
 import java.awt.GridBagLayout;

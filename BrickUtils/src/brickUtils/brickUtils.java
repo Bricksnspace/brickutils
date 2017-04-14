@@ -1,5 +1,5 @@
 /*
-	Copyright 2013-2014 Mario Pascucci <mpascucci@gmail.com>
+	Copyright 2013-2017 Mario Pascucci <mpascucci@gmail.com>
 	This file is part of BrickUtils.
 
 	BrickUtils is free software: you can redistribute it and/or modify
@@ -164,7 +164,7 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 	private static final String VERSIONURL = "http://brickutils.sourceforge.net/VERSION";
 	private static final String DEF_LDR_URL = "http://www.ldraw.org/library/updates/complete.zip";
 	private static final String DEF_UNOFF_LDR_URL = "http://www.ldraw.org/library/unofficial/ldrawunf.zip";
-	private static final String DEF_MAP_URL = "https://sourceforge.net/projects/brickutils/files/brickutils/updates/";
+	private static final String DEF_MAP_URL = "http://sourceforge.net/projects/brickutils/files/brickutils/updates/";
 	private static final String LDR_LIB_PATH = "complete.zip";
 	private static final String LDR_UNOFF_LIB_PATH = "ldrawunf.zip";
 	
@@ -273,16 +273,22 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 			BrickDB.initDB(dbc);
 			setProgress(30);
 			BricklinkLib.Init(dbc);
-			setProgress(60);
+			setProgress(40);
 			// init LDraw part libraries
 			ldrlib = loadLDrawLibs(dbc);
+			setProgress(60);
+			BrickMapping.Init(dbc);
+			setProgress(70);
+			Brick.setDb(dbc);
+			setProgress(90);
+			BrickSet.setDb(dbc);
 			setProgress(100);
 			return 100;
 		}
 		
 	}
 	
-	// FIXME: rivedere tutta la procedura di init.
+	
 	
 	public brickUtils() {
 		
@@ -960,9 +966,9 @@ public class brickUtils implements ActionListener, ListSelectionListener {
 						//"https://sourceforge.net/projects/brickutils/files/brickutils/updates/"));
 				//PartMapping.setDb(dbc);
 				// LDrawPart.setDb(brickDB);
-				BrickMapping.Init(dbc);
-				Brick.setDb(dbc);
-				BrickSet.setDb(dbc);
+//				BrickMapping.Init(dbc);
+//				Brick.setDb(dbc);
+//				BrickSet.setDb(dbc);
 				currentSet = BrickSet.getCurrent();
 				if (AppSettings.getBool(MySettings.MAP_UPDATE)) {
 					checkUpdate(true);

@@ -1,3 +1,7 @@
+2017-04-14  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/LdrTableModel.java: moved to LDraw library
+
 2017-04-12  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/LdrSearch.java: 

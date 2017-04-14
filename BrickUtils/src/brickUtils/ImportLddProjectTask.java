@@ -85,7 +85,8 @@ public class ImportLddProjectTask extends SwingWorker<Integer, Void> {
 				lineNo++;
 		}
 		lnr.close();
-		zf.close();
+		if (zf != null) 
+			zf.close();
 		XMLInputFactory xmlFact = XMLInputFactory.newInstance();
 		xmlFact.setProperty(XMLInputFactory.IS_COALESCING,true);
 		XMLEventReader xer;
