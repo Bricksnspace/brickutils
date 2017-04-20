@@ -115,40 +115,8 @@ import bricksnspace.ldrawlib.LDrawPart;
 
 /*
  * 
- * cose da fare:
- * Fatto: verificare che in caso di conversione con part LDD inesistente non venga copiato per errore
- * 		l'eventuale id che però in LDD non esiste (es. la piattaforma girevole 2x2 base e top che in LDD 
- * 		sono un solo pezzo.
- * Fatto: trovare un modo migliore per attivare il dialog di scelta alternative: se la riga è già selezionata
- * 		il click sul pulsante non ha effetto.  
- * Fatto: casella con il colore e editor colori
- * fatto: in blsearch e ldrsearch l'autoconvert deve essere selezionabile dall'esterno
- * 		per la situazione di conversione o di aggiunta brick
- * fatto: add brick from BL or LDr catalog (LDD, maybe?)
- * fatto: dialog di ricerca per parti LDD (...e tre...)
- * fatto: test delete brick/multiple
- * fatto: test duplicate brick
- * fatto: reflect changes from working list to db
- * fatto: make a dialog for set data
- * fatto: all'avvio caricare i dati del set, se impostati
- * fatto: la bottoniera "import" diventa "list operations"
- * fatto: inserire una parte in basso con forma del mattoncino (del colore giusto) e dati della lista.
- * fatto: set toolbar buttons import 
- * fatto: set toolbar buttons export
- * fatto: import set from pyBrickUtils
- * fatto: import from LDD (LXF + LXFML)
- * fatto: import from LDraw
- * fatto: export list in BL 
- * fatto: export list in HTML
- * fatto: check buildable
  * TODO: a function in "My bricks" that copy selected bricks to working list
- * done: MPD or ldr files must be identified from content, not from file ext
- * done: search for sub-model it is not only started if a part uses a ".ldr" extension
- * 			you MUST check if a part exists with this name, and ONLY after you checked that part
- * 			doesn't exists in library, you MUST search for inclusion file
- * done: speedup updates from Bricklink parts: work with database LEFT JOINs? no, using DB indexes!
- * done: check all massive updates and imports for speedup with db indexes
- * fatto: there are three categories for Bricklink: only bricks, only sets and all (that is never used)
+ * TODO: add a filter to see obsolete parts on ldraw/bricklink
  */
 
 
