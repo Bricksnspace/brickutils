@@ -72,7 +72,7 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 	private BrickShapePanel brickShape;
 	private LDrawLib ldrawlib;
 	private JScrollPane scrollPane;
-	private JRadioButton onlyDeleted;
+	private JCheckBox includeObsolete;
 	private JRadioButton onlyNew;
 	private JCheckBox autoConvert;
 	private JLabel isLddOk;
@@ -176,26 +176,26 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 		shapeOk = new ImageIcon(brickUtils.class.getResource("images/ok.png"));
 		shapeLike = new ImageIcon(brickUtils.class.getResource("images/no.png"));
 		
-		onlyDeleted = new JRadioButton(" Deleted Parts");
-		onlyDeleted.setSelected(false);
-		gbc.gridx = 0;
-		gbc.gridy = 2;
-		gbc.gridheight = 1;
-		userPane.add(onlyDeleted,gbc);
-		
 		onlyNew = new JRadioButton(" New Parts");
 		onlyNew.setSelected(false);
 		gbc.gridx = 0;
-		gbc.gridy = 3;
+		gbc.gridy = 2;
 		gbc.gridheight = 1;
 		userPane.add(onlyNew,gbc);
 		
 		ButtonGroup bgroup = new ButtonGroup();
 		bgroup.add(byId);
 		bgroup.add(byText);
-		bgroup.add(onlyDeleted);
+		//bgroup.add(includeObsolete);
 		bgroup.add(onlyNew);
 		byId.setSelected(true);
+		
+		includeObsolete = new JCheckBox(" Include obsolete parts");
+		includeObsolete.setSelected(false);
+		gbc.gridx = 0;
+		gbc.gridy = 4;
+		gbc.gridheight = 1;
+		userPane.add(includeObsolete,gbc);
 		
 		autoConvert = new JCheckBox(" Convert to LDD-Bricklink codes");
 		autoConvert.setSelected(false);
@@ -311,6 +311,7 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 				isBlOk.setText("-");
 			}
 		}
+		searchText.requestFocusInWindow();
 
 	}
 
@@ -349,6 +350,10 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 		
 		String query;
 		
+		if (includeObsolete.isSelected())
+			ldrawlib.getLdrDB().includeObsolete();
+		else
+			ldrawlib.getLdrDB().excludeObsolete();
 		if (byId.isSelected() && searchText.getText().length() > 0) {
 			// search by id with "like"
 			try {
@@ -446,6 +451,10 @@ public class LdrSearch extends JDialog implements ActionListener, ListSelectionL
 		}
 
 	}
+
+
+
+
 	
 }
 

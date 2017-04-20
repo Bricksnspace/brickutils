@@ -1,3 +1,7 @@
+2017-04-18  Mario Pascucci  <mpascucci@gmail.com>
+
+	* src/brickUtils/LdrSearch.java: Added a control to include obsolete parts in search
+
 2017-04-14  Mario Pascucci  <mpascucci@gmail.com>
 
 	* src/brickUtils/LdrTableModel.java: moved to LDraw library
