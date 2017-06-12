@@ -126,13 +126,13 @@ import bricksnspace.ldrawlib.LDrawPart;
 public class brickUtils implements ActionListener, ListSelectionListener {
 
 
-	private static final String BRICKDBURL = "http://downloads.sourceforge.net/project/brickutils/brickutils/brickutils.h2.db";
+	private static final String BRICKDBURL = "https://github.com/Bricksnspace/brickDB/raw/master/brickutils/brickutils.h2.db";
 	private static final String BRICKUTILSDB = "brickutils.h2.db";
 	private static final String appName = "BrickUtils";
-	private static final String VERSIONURL = "http://brickutils.sourceforge.net/VERSION";
+	private static final String VERSIONURL = "https://github.com/Bricksnspace/brickutils/raw/master/BrickUtils/VERSION";
 	private static final String DEF_LDR_URL = "http://www.ldraw.org/library/updates/complete.zip";
 	private static final String DEF_UNOFF_LDR_URL = "http://www.ldraw.org/library/unofficial/ldrawunf.zip";
-	private static final String DEF_MAP_URL = "http://sourceforge.net/projects/brickutils/files/brickutils/updates/";
+	private static final String DEF_MAP_URL = "https://github.com/Bricksnspace/brickDB/raw/master/brickutils/";
 	private static final String LDR_LIB_PATH = "complete.zip";
 	private static final String LDR_UNOFF_LIB_PATH = "ldrawunf.zip";
 	
